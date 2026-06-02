@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fonts setup */
+  --font-serif: var(--font-serif-cormorant), Georgia, serif;
+  --font-sans: var(--font-sans-montserrat), var(--font-geist-sans), sans-serif;
+
+  /* Premium Wedding Editorial Colors */
+  --color-brand-gold: #c5a880;
+  --color-brand-gold-dark: #b08e5b;
+  --color-brand-gold-light: #dfcbaf;
+  
+  --color-brand-cream: #faf7f2;
+  --color-brand-cream-dark: #f0ebe1;
+  
+  --color-brand-emerald: #1e352f;
+  --color-brand-emerald-dark: #12221e;
+  
+  --color-brand-charcoal: #1f1e1c;
+  --color-brand-clay: #8c7e6e;
+
+  /* Custom Cinematic Transition Utilities */
+  --animate-fade-in: fade-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-fade-in-up: fade-in-up 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-scale-up: scale-up 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-letter-spread: letter-spread 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes scale-up {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes letter-spread {
+    from {
+      letter-spacing: 0.05em;
+      opacity: 0;
+    }
+    to {
+      letter-spacing: 0.3em;
+      opacity: 1;
+    }
+  }
+}
+
+:root {
+  --background: #faf7f2;
+  --foreground: #1f1e1c;
+  --primary: #c5a880;
+  --secondary: #1e352f;
+}
+
+/* Lenis smooth scrolling compatibility */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  scroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Custom premium layouts and styling */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Elegant thin scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #faf7f2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5a880;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b08e5b;
+}
+
+/* Ambient grainy editorial texture background */
+.editorial-bg {
+  position: relative;
+}
+
+.editorial-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.02;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Text selections colors */
+::selection {
+  background-color: #c5a880;
+  color: #1e352f;
+}
