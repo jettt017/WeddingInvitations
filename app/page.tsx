@@ -1,9 +1,20 @@
+import HeroBackground from "@/components/splash-screen/HeroBackground";
+import DesktopPreview from "@/components/layout/DesktopPreview";
+
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-cream text-brand-emerald">
-      <h1 className="font-serif text-3xl font-light tracking-widest uppercase">
-        Wedding Invitation Setup Ready
-      </h1>
-    </div>
+    <>
+      {/* Mobile (<1024px): fullscreen hero background */}
+      <div className="block lg:hidden w-full">
+        <HeroBackground />
+      </div>
+
+      {/* Desktop (>=1024px): blurred bg + centered phone canvas */}
+      <div className="hidden lg:block">
+        <DesktopPreview>
+          <HeroBackground />
+        </DesktopPreview>
+      </div>
+    </>
   );
 }
