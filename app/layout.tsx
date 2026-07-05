@@ -39,6 +39,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald">
         <LenisProvider>
