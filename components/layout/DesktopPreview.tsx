@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { type ReactNode } from "react";
 
 interface DesktopPreviewProps {
@@ -7,27 +6,25 @@ interface DesktopPreviewProps {
 
 export default function DesktopPreview({ children }: DesktopPreviewProps) {
   return (
-    <>
-      {/* Full-screen fixed desktop background — left-anchored, subtle blur + dark overlay */}
-      <div className="fixed inset-0 z-0">
-        <Image
+    <div className="fixed inset-0">
+      {/* Layer 1 — Desktop background: fills entire viewport, stays behind everything */}
+      <div className="absolute inset-0 z-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/images/desktop/desktop-background.webp"
-          alt="Desktop wedding background"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-left-center brightness-90 blur-[2px]"
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover object-center"
         />
-        {/* Subtle dark overlay — only decorative */}
-        <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      {/* Phone canvas — pushed to the right side (~60-65% area) */}
-      <div className="relative z-10 flex min-h-screen items-center">
-        <div className="ml-auto mr-24 relative w-phone h-phone overflow-hidden rounded-[2.5rem] shadow-2xl">
-          {children}
-        </div>
+      {/* Layer 2 — Overlay: sits above background, does NOT blur the phone */}
+      <div className="absolute inset-0 z-10 bg-black/15" />
+
+      {/* Layer 3 — Phone preview: floats above both, right-aligned, vertically centered */}
+      <div className="absolute z-20 top-1/2 right-20 -translate-y-1/2 w-phone h-phone overflow-hidden rounded-[2.5rem] shadow-2xl">
+        {children}
       </div>
-    </>
+    </div>
   );
 }
