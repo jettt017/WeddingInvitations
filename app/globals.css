@@ -5,6 +5,10 @@
   --font-serif: var(--font-serif-cormorant), Georgia, serif;
   --font-sans: var(--font-sans-montserrat), var(--font-geist-sans), sans-serif;
 
+  /* Phone canvas dimensions — Figma base design (393×852) */
+  --width-phone: 393px;
+  --height-phone: 852px;
+
   /* Premium Wedding Editorial Colors */
   --color-brand-gold: #c5a880;
   --color-brand-gold-dark: #b08e5b;
