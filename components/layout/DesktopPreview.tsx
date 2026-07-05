@@ -8,7 +8,7 @@ interface DesktopPreviewProps {
 export default function DesktopPreview({ children }: DesktopPreviewProps) {
   return (
     <>
-      {/* Full-screen fixed blurred desktop background */}
+      {/* Full-screen fixed desktop background — left-anchored, subtle blur + dark overlay */}
       <div className="fixed inset-0 z-0">
         <Image
           src="/images/desktop/desktop-background.webp"
@@ -16,13 +16,15 @@ export default function DesktopPreview({ children }: DesktopPreviewProps) {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center brightness-75 blur-sm"
+          className="object-cover object-left-center brightness-90 blur-[2px]"
         />
+        {/* Subtle dark overlay — only decorative */}
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      {/* Centered phone canvas overlay */}
-      <div className="relative z-10 flex min-h-screen items-center justify-center">
-        <div className="relative w-phone h-phone overflow-hidden rounded-[2.5rem] shadow-2xl">
+      {/* Phone canvas — pushed to the right side (~60-65% area) */}
+      <div className="relative z-10 flex min-h-screen items-center">
+        <div className="ml-auto mr-24 relative w-phone h-phone overflow-hidden rounded-[2.5rem] shadow-2xl">
           {children}
         </div>
       </div>
