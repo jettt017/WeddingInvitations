@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Premium Digital Wedding Invitation 💍
 
-## Getting Started
+A high-end, responsive digital wedding invitation website built for Alexander & Eleanor. 
+The design features a luxurious editorial layout with a dreamy forest atmosphere, smooth cinematic transitions, and a unique desktop-preview architecture.
 
-First, run the development server:
+## 🌟 Key Features
+
+- **Mobile-First Design**: The core invitation is designed for a 393px mobile canvas, ensuring a perfect experience on smartphones.
+- **Desktop Preview Architecture**: On desktop screens, the mobile invitation is presented elegantly within a centered phone container over a blurred cinematic background, maintaining the integrity of the design without awkward stretching.
+- **Smooth Scrolling**: Integrated with [Lenis](https://lenis.studiofreight.com/) for a fluid, premium scrolling experience.
+- **Cinematic Animations**: Subtle, elegant animations (fade, translate, scale) to enhance the storytelling without overwhelming the user.
+- **Premium Typography**: Utilizes elegant serif (Cormorant Garamond) and clean sans-serif (Montserrat) fonts.
+
+## 🚀 Technology Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Library**: [React 19](https://react.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Animation**: [Framer Motion](https://www.framer.com/motion/) & CSS Keyframes
+- **Scrolling**: Lenis
+- **Icons**: Lucide React & React Icons
+- **Language**: TypeScript
+
+## 🛠️ Getting Started
+
+First, install the dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📂 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `app/`: Next.js App Router files (pages, layouts, global styles).
+- `components/`: Reusable React components.
+  - `layout/`: Core layout components (e.g., `DesktopPreview.tsx`).
+  - `splash-screen/`: First impression components (e.g., `HeroBackground.tsx`).
+  - `providers/`: React context providers (e.g., Lenis smooth scrolling).
+- `public/images/`: Optimized static images exported from Figma.
 
-## Learn More
+## 🎨 Design Rules
 
-To learn more about Next.js, take a look at the following resources:
+This project strictly follows the provided Figma design as the single source of truth. 
+- **Colors**: Sage Green, Olive Green, Ivory, Warm Cream, Dusty Beige, Soft Brown.
+- **Assets**: All images are pre-optimized. No resizing, cropping, or aspect ratio changes are permitted.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Built with ❤️ for Alexander & Eleanor.*
