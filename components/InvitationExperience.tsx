@@ -34,7 +34,10 @@ export default function InvitationExperience() {
         ) : (
           <motion.div
             key="main"
-            className="absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            role="region"
+            aria-labelledby="main-screen-title"
+            tabIndex={0}
+            className="focus-visible:ring-brand-gold-dark absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
             initial={{
               opacity: 0,
               y: shouldReduceMotion ? 0 : 18,

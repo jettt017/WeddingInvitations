@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 type InvitationModule = typeof import("../lib/invitation.ts");
@@ -11,20 +12,14 @@ test("to wins over guest", async () => {
   const invitation = await loadInvitationModule();
 
   assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(
-    invitation.resolveGuestName?.("?guest=Secondary&to=Primary"),
-    "Primary",
-  );
+  assert.equal(invitation.resolveGuestName?.("?guest=Secondary&to=Primary"), "Primary");
 });
 
 test("blank to falls through to guest", async () => {
   const invitation = await loadInvitationModule();
 
   assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(
-    invitation.resolveGuestName?.("?to=%20%20&guest=%20Taylor%20"),
-    "Taylor",
-  );
+  assert.equal(invitation.resolveGuestName?.("?to=%20%20&guest=%20Taylor%20"), "Taylor");
 });
 
 test("g is URL decoded", async () => {
@@ -38,20 +33,14 @@ test("returns object when supported values are absent or blank", async () => {
   const invitation = await loadInvitationModule();
 
   assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(
-    invitation.resolveGuestName?.("?to=%20&guest=&g=%09&name=Ignored"),
-    "object",
-  );
+  assert.equal(invitation.resolveGuestName?.("?to=%20&guest=&g=%09&name=Ignored"), "object");
 });
 
 test("open maps splash to main", async () => {
   const invitation = await loadInvitationModule();
 
   assert.equal(typeof invitation.invitationViewReducer, "function");
-  assert.equal(
-    invitation.invitationViewReducer?.("splash", { type: "open" }),
-    "main",
-  );
+  assert.equal(invitation.invitationViewReducer?.("splash", { type: "open" }), "main");
 });
 
 test("repeated open remains main", async () => {
@@ -64,10 +53,7 @@ test("repeated open remains main", async () => {
 
   const openedView = invitation.invitationViewReducer("splash", { type: "open" });
 
-  assert.equal(
-    invitation.invitationViewReducer(openedView, { type: "open" }),
-    "main",
-  );
+  assert.equal(invitation.invitationViewReducer(openedView, { type: "open" }), "main");
 });
 
 test("main screen assets use eight unique local image paths", async () => {
@@ -95,4 +81,16 @@ test("main screen assets use eight unique local image paths", async () => {
   assert.equal(new Set(paths).size, 8);
   assert.ok(paths.every((path) => path.startsWith("/images/main-screen/")));
   assert.ok(paths.every((path) => !path.includes("figma.com")));
+});
+
+test("main screen scroll region is keyboard accessible", async () => {
+  const source = await readFile(
+    new URL("../components/InvitationExperience.tsx", import.meta.url),
+    "utf8"
+  );
+
+  assert.match(source, /role="region"/);
+  assert.match(source, /aria-labelledby="main-screen-title"/);
+  assert.match(source, /tabIndex=\{0\}/);
+  assert.match(source, /focus-visible:ring-inset/);
 });
