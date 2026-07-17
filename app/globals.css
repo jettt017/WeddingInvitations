@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  /* Fonts setup */
   --font-serif: var(--font-serif-cormorant), Georgia, serif;
   --font-sans: var(--font-sans-montserrat), var(--font-geist-sans), sans-serif;
+  --font-literata: var(--font-literata), serif;
+  --font-qwigley: var(--font-qwigley), cursive;
+  --font-playfair: var(--font-playfair), serif;
+  --font-qwitcher: var(--font-qwitcher), cursive;
 
   /* Phone canvas dimensions — Figma base design (393×852) */
   --width-phone: 393px;
@@ -28,6 +31,7 @@
   --animate-fade-in-up: fade-in-up 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-scale-up: scale-up 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-letter-spread: letter-spread 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-float: float 3s ease-in-out infinite;
 
   @keyframes fade-in {
     from {
@@ -65,6 +69,14 @@
     to {
       letter-spacing: 0.3em;
       opacity: 1;
+    }
+  }
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
     }
   }
 }
