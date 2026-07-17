@@ -84,13 +84,24 @@ test("main screen assets use eight unique local image paths", async () => {
 });
 
 test("main screen scroll region is keyboard accessible", async () => {
-  const source = await readFile(
+  const experienceSource = await readFile(
     new URL("../components/InvitationExperience.tsx", import.meta.url),
     "utf8"
   );
+  const mainScreenSource = await readFile(
+    new URL("../components/main-screen/MainScreen.tsx", import.meta.url),
+    "utf8"
+  );
+  const mainRegion = experienceSource.match(/<motion\.div\s+key="main"[\s\S]*?>/)?.[0];
 
-  assert.match(source, /role="region"/);
-  assert.match(source, /aria-labelledby="main-screen-title"/);
-  assert.match(source, /tabIndex=\{0\}/);
-  assert.match(source, /focus-visible:ring-inset/);
+  assert.ok(mainRegion);
+  assert.match(mainRegion, /role="region"/);
+  assert.match(mainRegion, /aria-labelledby="main-screen-title"/);
+  assert.match(mainRegion, /tabIndex=\{0\}/);
+  assert.match(mainRegion, /focus-visible:ring-2/);
+  assert.match(mainRegion, /focus-visible:ring-inset/);
+  assert.equal(
+    (experienceSource + mainScreenSource).match(/aria-labelledby="main-screen-title"/g)?.length,
+    1
+  );
 });
