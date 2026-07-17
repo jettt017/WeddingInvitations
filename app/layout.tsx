@@ -41,7 +41,7 @@ export default function RootLayout({
       className={`${cormorant.variable} ${montserrat.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald">
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald">
         <LenisProvider>
           <main className="flex-grow flex flex-col">{children}</main>
         </LenisProvider>
