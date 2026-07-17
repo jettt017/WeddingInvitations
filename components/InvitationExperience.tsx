@@ -34,7 +34,7 @@ export default function InvitationExperience() {
         ) : (
           <motion.div
             key="main"
-            className="absolute inset-0 overflow-x-hidden overflow-y-auto bg-[#FAEBE0]"
+            className="absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             initial={{
               opacity: 0,
               y: shouldReduceMotion ? 0 : 18,

@@ -44,7 +44,7 @@ export default function MainScreen() {
   return (
     <section
       aria-labelledby="main-screen-title"
-      className="relative mx-auto h-[852px] w-[393px] shrink-0 overflow-hidden bg-[#FAEBE0] text-black"
+      className="relative left-1/2 h-[852px] w-[393px] shrink-0 -translate-x-1/2 overflow-hidden bg-[#FAEBE0] text-black"
       data-figma-node="42:2"
     >
       <DecorativeImage
