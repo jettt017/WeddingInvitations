@@ -28,7 +28,7 @@ export type InvitationEvent = { type: "open" };
 
 export function invitationViewReducer(
   view: InvitationView,
-  event: InvitationEvent,
+  event: InvitationEvent
 ): InvitationView {
   if (event.type === "open" && view === "splash") {
     return "main";
