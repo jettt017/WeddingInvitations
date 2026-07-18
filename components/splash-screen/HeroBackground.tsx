@@ -1,24 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-export default function HeroBackground() {
-  const [guestName, setGuestName] = useState("object");
+import { resolveGuestName } from "@/lib/invitation";
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const to = params.get("to") || params.get("guest") || params.get("g");
-    if (to) {
-      setGuestName(to);
-    }
-  }, []);
+interface HeroBackgroundProps {
+  onOpen: () => void;
+}
+
+function subscribeToLocation(onStoreChange: () => void) {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+}
+
+function readGuestName() {
+  return resolveGuestName(window.location.search);
+}
+
+function readServerGuestName() {
+  return resolveGuestName("");
+}
+
+export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
+  const guestName = useSyncExternalStore(subscribeToLocation, readGuestName, readServerGuestName);
 
   return (
-    <div className="relative w-full h-dvh lg:h-full overflow-hidden flex flex-col justify-between items-center text-white select-none">
+    <div className="relative flex h-dvh w-full flex-col items-center justify-between overflow-hidden text-white select-none lg:h-full">
       {/* Background Image with subtle overlay */}
-      <div className="absolute inset-0 z-0 select-none pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 z-0 select-none">
         <Image
           src="/images/splash-screen/hero-background.webp"
           alt="Wedding background"
@@ -32,37 +43,36 @@ export default function HeroBackground() {
       </div>
 
       {/* Full-frame Botanical Decoration */}
-      <div className="absolute inset-0 z-10 pointer-events-none select-none">
+      <div className="pointer-events-none absolute inset-0 z-10 select-none">
         <Image
           src="/images/splash-screen/decoration.png"
           alt="Botanical decorations"
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center scale-[1.04] origin-center"
+          className="origin-center scale-[1.04] object-cover object-center"
         />
       </div>
 
       {/* Main Content Layout */}
-      <div className="relative inset-0 z-20 w-full h-full flex flex-col justify-between items-center py-16 px-6">
-        
+      <div className="relative inset-0 z-20 flex h-full w-full flex-col items-center justify-between px-6 py-16">
         {/* TOP: Guest Greeting & Rings */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col items-center mt-8 text-center"
+          className="mt-8 flex flex-col items-center text-center"
         >
           <div className="flex items-baseline space-x-2.5">
             <span className="font-literata text-[20px] font-normal tracking-wide text-white/90">
               Dear
             </span>
-            <span className="font-qwigley text-[48px] font-normal leading-[0.5] text-[#fbead8] translate-y-1">
+            <span className="font-qwigley translate-y-1 text-[48px] leading-[0.5] font-normal text-[#fbead8]">
               {guestName}
             </span>
           </div>
-          
-          <div className="w-[160px] h-[42px] relative mt-5">
+
+          <div className="relative mt-5 h-[42px] w-[160px]">
             <Image
               src="/images/splash-screen/ring.png"
               alt="Rings ornament"
@@ -73,44 +83,44 @@ export default function HeroBackground() {
         </motion.div>
 
         {/* MIDDLE: Title, Names & Date */}
-        <div className="flex flex-col items-center text-center my-auto py-6">
+        <div className="my-auto flex flex-col items-center py-6 text-center">
           <motion.h2
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="font-literata text-[14px] tracking-[0.25em] font-normal text-white/80 uppercase"
+            className="font-literata text-[14px] font-normal tracking-[0.25em] text-white/80 uppercase"
           >
             The wedding of
           </motion.h2>
 
           {/* Stylized Names Container */}
-          <div className="relative w-full min-w-[290px] max-w-[320px] flex flex-col mt-4">
+          <div className="relative mt-4 flex w-full max-w-[320px] min-w-[290px] flex-col">
             {/* Kinan */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1.4, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="font-playfair text-[64px] font-normal leading-[1.05] text-white text-left pl-6"
+              className="font-playfair pl-6 text-left text-[64px] leading-[1.05] font-normal text-white"
             >
               Kinan
             </motion.div>
-            
+
             {/* "and" handwritten script overlapping */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1.2, delay: 0.8, ease: "easeOut" }}
-              className="font-qwitcher text-[56px] font-normal text-white/95 absolute left-[56%] top-[36px] -translate-x-1/2 leading-none z-10"
+              className="font-qwitcher absolute top-[36px] left-[56%] z-10 -translate-x-1/2 text-[56px] leading-none font-normal text-white/95"
             >
               and
             </motion.div>
-            
+
             {/* Faiz */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1.4, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="font-playfair text-[64px] font-normal leading-[1.05] text-white text-right pr-6 mt-1"
+              className="font-playfair mt-1 pr-6 text-right text-[64px] leading-[1.05] font-normal text-white"
             >
               Faiz
             </motion.div>
@@ -121,10 +131,10 @@ export default function HeroBackground() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 flex items-center justify-center w-full px-6"
+            className="mt-8 flex w-full items-center justify-center px-6"
           >
             <div className="h-[0.5px] w-12 bg-white/40" />
-            <span className="font-playfair text-[15px] tracking-[0.2em] text-white/90 font-medium mx-4 whitespace-nowrap">
+            <span className="font-playfair mx-4 text-[15px] font-medium tracking-[0.2em] whitespace-nowrap text-white/90">
               16 . 08 . 2026
             </span>
             <div className="h-[0.5px] w-12 bg-white/40" />
@@ -136,9 +146,14 @@ export default function HeroBackground() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.4, delay: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col items-center w-full mb-2"
+          className="mb-2 flex w-full flex-col items-center"
         >
-          <button className="relative w-[210px] h-[105px] cursor-pointer hover:scale-105 active:scale-98 transition-transform duration-300 focus:outline-none">
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label="Open invitation"
+            className="relative h-[105px] w-[210px] cursor-pointer transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-transparent active:scale-98"
+          >
             <Image
               src="/images/splash-screen/button.png"
               alt="Open Invitation"
@@ -147,9 +162,9 @@ export default function HeroBackground() {
               priority
             />
             {/* Custom White Chevron to highlight active state and float gently */}
-            <div className="absolute bottom-[4px] left-1/2 -translate-x-1/2 text-white opacity-95 animate-float">
+            <div className="animate-float absolute bottom-[4px] left-1/2 -translate-x-1/2 text-white opacity-95">
               <svg
-                className="w-5 h-5"
+                className="h-5 w-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -160,7 +175,6 @@ export default function HeroBackground() {
             </div>
           </button>
         </motion.div>
-
       </div>
     </div>
   );
