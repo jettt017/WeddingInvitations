@@ -1,18 +1,18 @@
-import HeroBackground from "@/components/splash-screen/HeroBackground";
+import InvitationExperience from "@/components/InvitationExperience";
 import DesktopPreview from "@/components/layout/DesktopPreview";
 
 export default function Home() {
   return (
     <>
       {/* Mobile (<1024px): fullscreen hero background */}
-      <div className="block lg:hidden w-full">
-        <HeroBackground />
+      <div className="block w-full lg:hidden">
+        <InvitationExperience />
       </div>
 
       {/* Desktop (>=1024px): blurred bg + centered phone canvas */}
       <div className="hidden lg:block">
         <DesktopPreview>
-          <HeroBackground />
+          <InvitationExperience />
         </DesktopPreview>
       </div>
     </>
