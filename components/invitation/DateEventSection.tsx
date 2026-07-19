@@ -9,19 +9,36 @@ import StorySection from "@/components/invitation/StorySection";
 import {
   buildGoogleCalendarUrl,
   calculateCountdown,
-  EMPTY_COUNTDOWN,
+  type CountdownValue,
   STORY_ASSETS,
   WEDDING_EVENT,
 } from "@/lib/invitation-story";
 
+type CountdownDisplayValue = Partial<CountdownValue>;
+
+const EMPTY_COUNTDOWN_DISPLAY: CountdownDisplayValue = {};
+
+function isComplete(value: CountdownValue): boolean {
+  return value.days === 0 && value.hours === 0 && value.minutes === 0 && value.seconds === 0;
+}
+
 function Countdown() {
-  const [value, setValue] = useState(EMPTY_COUNTDOWN);
+  const [value, setValue] = useState<CountdownDisplayValue>(EMPTY_COUNTDOWN_DISPLAY);
 
   useEffect(() => {
-    const update = () => setValue(calculateCountdown(WEDDING_EVENT.start));
+    let timeout: number | undefined;
+    const update = () => {
+      const nextValue = calculateCountdown(WEDDING_EVENT.start);
+      setValue(nextValue);
+      if (isComplete(nextValue)) return;
+
+      timeout = window.setTimeout(update, 1000);
+    };
+
     update();
-    const interval = window.setInterval(update, 1000);
-    return () => window.clearInterval(interval);
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout);
+    };
   }, []);
 
   return (
@@ -35,10 +52,12 @@ function Countdown() {
         ] as const
       ).map(([number, label]) => (
         <div key={label} className="w-[79px]">
-          <p className="font-playfair text-[24px] leading-[32px] tracking-[0.9336px] tabular-nums">
-            {String(number).padStart(2, "0")}
+          <p className="font-prata text-[24px] leading-[44.188px] tracking-[0.9336px] tabular-nums">
+            {number === undefined ? "--" : String(number).padStart(2, "0")}
           </p>
-          <p className="font-playfair text-[17px] leading-[25px] tracking-[0.3px]">{label}</p>
+          <p className="font-playfair text-[19.347px] leading-[27.86px] tracking-[0.5886px]">
+            {label}
+          </p>
         </div>
       ))}
     </div>
