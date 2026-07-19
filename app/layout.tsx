@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Montserrat, Literata, Qwigley, Playfair_Display, Qwitcher_Grypen } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Montserrat,
+  Literata,
+  Prata,
+  Qwigley,
+  Playfair_Display,
+  Qwitcher_Grypen,
+} from "next/font/google";
 import { LenisProvider } from "@/components/providers/lenis-provider";
 import "./globals.css";
 
@@ -24,6 +32,13 @@ const literata = Literata({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+const prata = Prata({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-prata",
+  weight: "400",
+});
+
 const qwigley = Qwigley({
   subsets: ["latin"],
   display: "swap",
@@ -46,14 +61,14 @@ const qwitcherGrypen = Qwitcher_Grypen({
 });
 
 export const metadata: Metadata = {
-  title: "Alexander & Eleanor | The Wedding Invitation",
+  title: "Kinan & Faiz | The Wedding Invitation",
   description:
-    "You are cordially invited to celebrate the marriage of Alexander and Eleanor on Saturday, October 24, 2026, in Florence, Italy.",
-  keywords: ["wedding", "invitation", "Alexander & Eleanor", "Florence Italy", "Villa La Massa"],
-  authors: [{ name: "Alexander & Eleanor" }],
+    "You are cordially invited to celebrate the marriage of Kinan and Faiz on August 16, 2026, in Bandung.",
+  keywords: ["wedding", "invitation", "Kinan & Faiz", "Bandung"],
+  authors: [{ name: "Kinan & Faiz" }],
   openGraph: {
-    title: "Alexander & Eleanor | The Wedding Invitation",
-    description: "Join us in celebrating our wedding day in Florence, Italy.",
+    title: "Kinan & Faiz | The Wedding Invitation",
+    description: "Join Kinan and Faiz in celebrating their wedding day on August 16, 2026.",
     type: "website",
   },
 };
@@ -66,12 +81,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${montserrat.variable} ${literata.variable} ${qwigley.variable} ${playfairDisplay.variable} ${qwitcherGrypen.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${montserrat.variable} ${literata.variable} ${prata.variable} ${qwigley.variable} ${playfairDisplay.variable} ${qwitcherGrypen.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald">
+      <body
+        suppressHydrationWarning
+        className="bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald flex min-h-full flex-col"
+      >
         <LenisProvider>
-          <main className="flex-grow flex flex-col">{children}</main>
+          <main className="flex flex-grow flex-col">{children}</main>
         </LenisProvider>
       </body>
     </html>
