@@ -7,6 +7,16 @@ export const WEDDING_EVENT = {
   details: "Akad Nikah and wedding reception for Kinan & Faiz.",
 } as const;
 
+export const INVITATION_DESIGN_WIDTH = 393;
+export const INVITATION_STORY_HEIGHT = 6426;
+
+export function calculateInvitationScale(viewportWidth: number): number {
+  if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 1;
+  return viewportWidth < INVITATION_DESIGN_WIDTH
+    ? viewportWidth / INVITATION_DESIGN_WIDTH
+    : 1;
+}
+
 const storyAsset = (path: string) => `/images/story/${path}`;
 
 export const STORY_ASSETS = {
