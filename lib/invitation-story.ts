@@ -97,8 +97,14 @@ export const EMPTY_COUNTDOWN: CountdownValue = {
 };
 
 export function calculateCountdown(target: string | Date, now: Date = new Date()): CountdownValue {
-  const remaining = Math.max(0, new Date(target).getTime() - now.getTime());
-  const totalSeconds = Math.floor(remaining / 1000);
+  const targetTime = new Date(target).getTime();
+  const currentTime = now.getTime();
+
+  if (!Number.isFinite(targetTime) || !Number.isFinite(currentTime) || targetTime <= currentTime) {
+    return EMPTY_COUNTDOWN;
+  }
+
+  const totalSeconds = Math.ceil((targetTime - currentTime) / 1000);
 
   return {
     days: Math.floor(totalSeconds / 86_400),

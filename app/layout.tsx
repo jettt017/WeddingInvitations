@@ -3,6 +3,7 @@ import {
   Cormorant_Garamond,
   Montserrat,
   Literata,
+  Prata,
   Qwigley,
   Playfair_Display,
   Qwitcher_Grypen,
@@ -29,6 +30,13 @@ const literata = Literata({
   display: "swap",
   variable: "--font-literata",
   weight: ["300", "400", "500", "600", "700"],
+});
+
+const prata = Prata({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-prata",
+  weight: "400",
 });
 
 const qwigley = Qwigley({
@@ -73,7 +81,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${montserrat.variable} ${literata.variable} ${qwigley.variable} ${playfairDisplay.variable} ${qwitcherGrypen.variable} h-full antialiased`}
+      className={`${cormorant.variable} ${montserrat.variable} ${literata.variable} ${prata.variable} ${qwigley.variable} ${playfairDisplay.variable} ${qwitcherGrypen.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body

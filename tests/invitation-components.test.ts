@@ -143,9 +143,22 @@ test("document metadata matches Kinan and Faiz on 16 August 2026", async () => {
   assert.doesNotMatch(source, /Alexander|Eleanor|Florence/);
 });
 
-test("countdown hydrates from a deterministic initial value", async () => {
+test("countdown starts with placeholders, schedules timeouts, and uses the Figma fonts", async () => {
   const source = await readSource("../components/invitation/DateEventSection.tsx");
 
-  assert.match(source, /useState\(EMPTY_COUNTDOWN\)/);
+  assert.match(source, /useState<CountdownDisplayValue>\(EMPTY_COUNTDOWN_DISPLAY\)/);
+  assert.match(source, /number === undefined \? "--"/);
+  assert.match(source, /window\.setTimeout\(update, 1000\)/);
+  assert.match(source, /window\.clearTimeout\(timeout\)/);
+  assert.match(source, /if \(isComplete\(nextValue\)\) return;/);
+  assert.match(
+    source,
+    /font-prata text-\[24px\] leading-\[44\.188px\] tracking-\[0\.9336px\] tabular-nums/
+  );
+  assert.match(
+    source,
+    /font-playfair text-\[19\.347px\] leading-\[27\.86px\] tracking-\[0\.5886px\]/
+  );
   assert.doesNotMatch(source, /useState\(\(\) => calculateCountdown/);
+  assert.doesNotMatch(source, /setInterval/);
 });

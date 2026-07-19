@@ -27,6 +27,33 @@ test("countdown separates remaining time into days hours minutes and seconds", a
   );
 });
 
+test("countdown uses the exact UTC instants for the wedding event", async () => {
+  const story = await loadStoryModule();
+
+  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T08:00:00+07:00");
+  assert.equal(story.WEDDING_EVENT.end, "2026-08-16T12:00:00+07:00");
+  assert.equal(new Date(story.WEDDING_EVENT.start).toISOString(), "2026-08-16T01:00:00.000Z");
+  assert.equal(new Date(story.WEDDING_EVENT.end).toISOString(), "2026-08-16T05:00:00.000Z");
+});
+
+test("countdown rounds positive partial seconds up", async () => {
+  const story = await loadStoryModule();
+
+  assert.deepEqual(
+    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-16T00:59:59.999Z")),
+    { days: 0, hours: 0, minutes: 0, seconds: 1 }
+  );
+});
+
+test("countdown returns zero at the exact event start", async () => {
+  const story = await loadStoryModule();
+
+  assert.deepEqual(
+    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-16T01:00:00.000Z")),
+    { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  );
+});
+
 test("countdown stops at zero after the event starts", async () => {
   const story = await loadStoryModule();
 
@@ -35,6 +62,21 @@ test("countdown stops at zero after the event starts", async () => {
 
   assert.deepEqual(
     story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-17T00:00:00+07:00")),
+    { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  );
+});
+
+test("countdown never exposes NaN for invalid dates", async () => {
+  const story = await loadStoryModule();
+
+  assert.deepEqual(story.calculateCountdown("not-a-date", new Date("2026-08-16T00:00:00.000Z")), {
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+  assert.deepEqual(
+    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("not-a-date")),
     { days: 0, hours: 0, minutes: 0, seconds: 0 }
   );
 });
