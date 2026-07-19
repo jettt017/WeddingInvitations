@@ -92,6 +92,53 @@ export const STORY_ASSETS = {
   },
 } as const;
 
+export const STORY_PHOTOS = {
+  coupleCover: {
+    replacementFile: "couple-cover.webp",
+    alt: "Kinan and Faiz posing outdoors",
+    fallbacks: [
+      {
+        src: STORY_ASSETS.groomBride.groomPhoto,
+        objectPosition: "50% 63%",
+      },
+      {
+        src: STORY_ASSETS.groomBride.bridePhoto,
+        objectPosition: "50% 52%",
+      },
+    ],
+  },
+  galleryFeature01: {
+    replacementFile: "gallery-feature-01.webp",
+    alt: "Faiz posing outdoors beneath the trees",
+    fallbacks: [
+      {
+        src: STORY_ASSETS.groomBride.groomPhoto,
+        objectPosition: "50% 63%",
+      },
+    ],
+  },
+  galleryFeature02: {
+    replacementFile: "gallery-feature-02.webp",
+    alt: "Kinan posing outdoors in a sunlit garden",
+    fallbacks: [
+      {
+        src: STORY_ASSETS.groomBride.bridePhoto,
+        objectPosition: "50% 52%",
+      },
+    ],
+  },
+  galleryFeature03: {
+    replacementFile: "gallery-feature-03.webp",
+    alt: "Collage of wedding preparation portraits and details",
+    fallbacks: [
+      {
+        src: STORY_ASSETS.gallery.collage,
+        objectPosition: "50% 50%",
+      },
+    ],
+  },
+} as const;
+
 export interface CountdownValue {
   days: number;
   hours: number;

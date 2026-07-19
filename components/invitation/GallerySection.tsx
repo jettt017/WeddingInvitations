@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
-import { STORY_ASSETS } from "@/lib/invitation-story";
+import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
 interface GallerySectionProps {
   mode: "preview" | "expanded";
@@ -51,14 +51,39 @@ function GalleryBackdrop() {
   );
 }
 
-function Polaroid({ left, top, rotate = 0 }: { left: number; top: number; rotate?: number }) {
+type GalleryPhoto =
+  | typeof STORY_PHOTOS.galleryFeature01
+  | typeof STORY_PHOTOS.galleryFeature02
+  | typeof STORY_PHOTOS.galleryFeature03;
+
+function Polaroid({
+  photo,
+  left,
+  top,
+  rotate = 0,
+}: {
+  photo: GalleryPhoto;
+  left: number;
+  top: number;
+  rotate?: number;
+}) {
+  const fallback = photo.fallbacks[0];
+
   return (
     <div
-      aria-label="Gallery photo placeholder"
       className="absolute h-[223px] w-[199px] bg-[#D9D9D9] p-[9px] pb-[39px] shadow-sm"
       style={{ left, top, transform: `rotate(${rotate}deg)` }}
     >
-      <div className="h-full w-full bg-black" />
+      <div className="relative h-full w-full overflow-hidden">
+        <Image
+          src={fallback.src}
+          alt={photo.alt}
+          fill
+          sizes="181px"
+          className="object-cover"
+          style={{ objectPosition: fallback.objectPosition }}
+        />
+      </div>
     </div>
   );
 }
@@ -83,9 +108,19 @@ function GalleryPreview({
         <GalleryBackdrop />
         <MusicButton className="top-5 left-5" />
 
-        <Polaroid left={89} top={149} />
-        <Polaroid left={67} top={318} rotate={-12.14} />
-        <Polaroid left={126} top={467} rotate={12.32} />
+        <Polaroid photo={STORY_PHOTOS.galleryFeature01} left={89} top={149} />
+        <Polaroid
+          photo={STORY_PHOTOS.galleryFeature02}
+          left={67}
+          top={318}
+          rotate={-12.14}
+        />
+        <Polaroid
+          photo={STORY_PHOTOS.galleryFeature03}
+          left={126}
+          top={467}
+          rotate={12.32}
+        />
 
         <button
           ref={viewMoreRef}

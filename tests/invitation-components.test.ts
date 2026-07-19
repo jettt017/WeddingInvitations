@@ -135,6 +135,24 @@ test("production component sources do not reference temporary Figma asset URLs",
   assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
 });
 
+test("couple cover and gallery preview render configured photos without placeholders", async () => {
+  const coupleSource = await readSource("../components/invitation/CouplePhotoSection.tsx");
+  const gallerySource = await readSource("../components/invitation/GallerySection.tsx");
+  const source = `${coupleSource}\n${gallerySource}`;
+
+  assert.match(coupleSource, /import Image from ["']next\/image["']/);
+  assert.match(coupleSource, /STORY_PHOTOS\.coupleCover/);
+  assert.match(coupleSource, /role="img"/);
+  assert.match(coupleSource, /aria-label=\{photo\.alt\}/);
+  assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature01/);
+  assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature02/);
+  assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature03/);
+  assert.match(gallerySource, /alt=\{photo\.alt\}/);
+  assert.doesNotMatch(source, /photo placeholder/i);
+  assert.doesNotMatch(gallerySource, /bg-black/);
+  assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
+});
+
 test("document metadata matches Kinan and Faiz on 16 August 2026", async () => {
   const source = await readSource("../app/layout.tsx");
 

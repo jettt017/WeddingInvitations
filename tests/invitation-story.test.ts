@@ -187,3 +187,33 @@ test("story assets are committed local files rather than temporary Figma URLs", 
   assert.ok(paths.some((path) => path.endsWith("gallery/collage.webp")));
   assert.ok(paths.some((path) => path.endsWith("thank-you/rings.webp")));
 });
+
+test("photo slots record meaningful local fallbacks and their final replacement names", async () => {
+  const story = await loadStoryModule();
+
+  assert.equal(typeof story.STORY_PHOTOS, "object");
+  if (!("STORY_PHOTOS" in story)) return;
+
+  assert.equal(story.STORY_PHOTOS.coupleCover.replacementFile, "couple-cover.webp");
+  assert.equal(story.STORY_PHOTOS.galleryFeature01.replacementFile, "gallery-feature-01.webp");
+  assert.equal(story.STORY_PHOTOS.galleryFeature02.replacementFile, "gallery-feature-02.webp");
+  assert.equal(story.STORY_PHOTOS.galleryFeature03.replacementFile, "gallery-feature-03.webp");
+
+  const photos = Object.values(story.STORY_PHOTOS);
+  assert.ok(photos.every((photo) => photo.alt.trim().length > 0));
+  assert.ok(
+    photos.every((photo) =>
+      photo.fallbacks.every(
+        (fallback) =>
+          fallback.src.startsWith("/images/") &&
+          !fallback.src.includes("figma.com") &&
+          fallback.objectPosition.trim().length > 0
+      )
+    )
+  );
+  assert.deepEqual(
+    story.STORY_PHOTOS.coupleCover.fallbacks.map((fallback) => fallback.objectPosition),
+    ["50% 63%", "50% 52%"]
+  );
+  assert.match(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src, /gallery\/collage\.webp$/);
+});
