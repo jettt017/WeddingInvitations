@@ -1,12 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+import { hasSupabaseConfig } from "@/lib/invitation-story";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    "Supabase credentials missing. RSVP submissions will fail until environment variables are set."
-  );
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = hasSupabaseConfig(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl!, supabaseAnonKey!)
+  : null;

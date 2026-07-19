@@ -3,7 +3,7 @@
 import { useReducer } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
-import MainScreen from "@/components/main-screen/MainScreen";
+import InvitationStory from "@/components/invitation/InvitationStory";
 import HeroBackground from "@/components/splash-screen/HeroBackground";
 import { invitationViewReducer } from "@/lib/invitation";
 
@@ -49,7 +49,7 @@ export default function InvitationExperience() {
               ease: transitionEase,
             }}
           >
-            <MainScreen />
+            <InvitationStory />
           </motion.div>
         )}
       </AnimatePresence>
