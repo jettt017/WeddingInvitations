@@ -1,17 +1,35 @@
+import Image from "next/image";
+
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
-import { STORY_ASSETS } from "@/lib/invitation-story";
+import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
 export default function CouplePhotoSection() {
   const assets = STORY_ASSETS.couplePhoto;
+  const photo = STORY_PHOTOS.coupleCover;
 
   return (
     <StorySection figmaNode="62:43" section="couple-photo">
       <div
-        aria-label="Couple photo placeholder"
-        className="absolute top-0 left-0 h-[413px] w-[393px] bg-[#D9D9D9]"
-      />
+        role="img"
+        aria-label={photo.alt}
+        className="absolute top-0 left-0 flex h-[413px] w-[393px] overflow-hidden"
+      >
+        {photo.fallbacks.map((fallback) => (
+          <div key={fallback.src} className="relative h-full flex-1 overflow-hidden">
+            <Image
+              src={fallback.src}
+              alt=""
+              fill
+              sizes="197px"
+              className="object-cover"
+              style={{ objectPosition: fallback.objectPosition }}
+            />
+          </div>
+        ))}
+        <div aria-hidden="true" className="absolute inset-0 bg-black/10" />
+      </div>
       <div
         aria-hidden="true"
         className="absolute top-[689px] left-0 h-[163px] w-[393px] bg-gradient-to-b from-transparent to-black/10"
