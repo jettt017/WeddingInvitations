@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import Image from "next/image";
+import { motion, type MotionProps } from "framer-motion";
 
-interface DecorativeImageProps {
+interface DecorativeImageProps extends MotionProps {
   src: string;
   alt?: string;
   box: CSSProperties;
@@ -12,6 +13,8 @@ interface DecorativeImageProps {
   priority?: boolean;
 }
 
+const positioningKeys = ["position", "left", "right", "top", "bottom", "width", "height", "zIndex"];
+
 export default function DecorativeImage({
   src,
   alt = "",
@@ -21,25 +24,44 @@ export default function DecorativeImage({
   sizes,
   className = "",
   priority = false,
+  ...motionProps
 }: DecorativeImageProps) {
+  const positioning: CSSProperties = { position: "absolute" };
+  const styling: CSSProperties = {};
+
+  if (box) {
+    Object.entries(box).forEach(([key, value]) => {
+      if (positioningKeys.includes(key)) {
+        (positioning as any)[key] = value;
+      } else {
+        (styling as any)[key] = value;
+      }
+    });
+  }
+
   return (
-    <div
-      aria-hidden={alt ? undefined : true}
-      className={`pointer-events-none absolute overflow-hidden ${className}`}
-      style={box}
+    <motion.div
+      style={positioning}
+      {...motionProps}
     >
-      <div className="absolute" style={imageBox}>
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          draggable={false}
-          className="select-none"
-          style={imageStyle}
-        />
+      <div
+        aria-hidden={alt ? undefined : true}
+        className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}
+        style={styling}
+      >
+        <div className="absolute" style={imageBox}>
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes={sizes}
+            priority={priority}
+            draggable={false}
+            className="select-none"
+            style={imageStyle}
+          />
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

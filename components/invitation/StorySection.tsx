@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import { STORY_ASSETS } from "@/lib/invitation-story";
