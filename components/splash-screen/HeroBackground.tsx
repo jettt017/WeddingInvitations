@@ -42,17 +42,6 @@ export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/35" />
       </div>
 
-      {/* Full-frame Botanical Decoration */}
-      <div className="pointer-events-none absolute inset-0 z-10 select-none">
-        <Image
-          src="/images/splash-screen/decoration.png"
-          alt="Botanical decorations"
-          fill
-          priority
-          sizes="100vw"
-          className="origin-center scale-[1.04] object-cover object-center"
-        />
-      </div>
 
       {/* Main Content Layout */}
       <div className="relative inset-0 z-20 flex h-full w-full flex-col items-center justify-between px-6 py-16">

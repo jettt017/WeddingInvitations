@@ -11,11 +11,14 @@ import ResponsiveStoryCanvas from "@/components/invitation/ResponsiveStoryCanvas
 import RsvpSection from "@/components/invitation/RsvpSection";
 import ThankYouSection from "@/components/invitation/ThankYouSection";
 import MainScreen from "@/components/main-screen/MainScreen";
-import { INITIAL_STORY_INTERACTION, storyInteractionReducer } from "@/lib/invitation-story";
+import { type StoryInteractionState, type StoryInteractionEvent } from "@/lib/invitation-story";
 
-export default function InvitationStory() {
-  const [interaction, dispatch] = useReducer(storyInteractionReducer, INITIAL_STORY_INTERACTION);
+interface InvitationStoryProps {
+  interaction: StoryInteractionState;
+  dispatch: React.Dispatch<StoryInteractionEvent>;
+}
 
+export default function InvitationStory({ interaction, dispatch }: InvitationStoryProps) {
   return (
     <MusicProvider>
       <ResponsiveStoryCanvas>
@@ -25,9 +28,10 @@ export default function InvitationStory() {
           <CouplePhotoSection />
           <DateEventSection />
           <RsvpSection
-            mode={interaction.rsvp}
+            mode="intro"
             onOpen={() => dispatch({ type: "open_rsvp" })}
-            onSubmitted={() => dispatch({ type: "rsvp_submitted" })}
+            onSubmitted={() => {}}
+            onClose={() => {}}
           />
           <GallerySection
             mode={interaction.gallery}

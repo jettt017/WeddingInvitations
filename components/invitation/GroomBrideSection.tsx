@@ -1,9 +1,24 @@
 import Image from "next/image";
+import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS } from "@/lib/invitation-story";
+
+const anim = (delay: number, y = 20) => ({
+  initial: { opacity: 0, y, filter: "blur(2px)" },
+  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
+  viewport: { once: false, margin: "-60px" },
+  transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
+});
+
+const fadeAnim = (delay: number) => ({
+  initial: { opacity: 0, scale: 1.01 },
+  whileInView: { opacity: 1, scale: 1 },
+  viewport: { once: false, margin: "-60px" },
+  transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
+});
 
 function Portrait({
   side,
@@ -24,10 +39,11 @@ function Portrait({
     : { left: -99, top: -93, width: 343, height: 513 };
 
   return (
-    <div
+    <motion.div
       aria-label={`${side} portrait`}
       className="absolute"
       style={{ left, top, width: 161, height: 281 }}
+      {...anim(isGroom ? 0.35 : 0.6)}
     >
       <div className="absolute inset-0 overflow-hidden rounded-t-[86px] rounded-b-[6px]">
         <div className="absolute" style={photoBox}>
@@ -45,20 +61,23 @@ function Portrait({
         box={{ left: 0, top: -96, width: 161, height: 286 }}
         sizes="161px"
         imageStyle={{ objectPosition: "bottom" }}
+        {...fadeAnim(isGroom ? 0.45 : 0.7)}
       />
       <DecorativeImage
         src={branch}
         box={{ left: 24, top: -42, width: 137, height: 184 }}
         sizes="137px"
         imageStyle={{ objectPosition: "bottom" }}
+        {...fadeAnim(isGroom ? 0.5 : 0.75)}
       />
       <DecorativeImage
         src={STORY_ASSETS.groomBride.portraitFlowers}
         box={{ left: -18, top: 230, width: 198, height: 71 }}
         imageBox={{ left: 0, top: "-201.41%", width: "100%", height: "495.77%" }}
         sizes="198px"
+        {...fadeAnim(isGroom ? 0.55 : 0.8)}
       />
-    </div>
+    </motion.div>
   );
 }
 
@@ -72,28 +91,40 @@ export default function GroomBrideSection() {
         box={{ left: -26, top: -355, width: 445, height: 792 }}
         sizes="445px"
         imageStyle={{ objectFit: "cover" }}
+        {...fadeAnim(0.1)}
       />
       <DecorativeImage
         src={assets.leavesFrame}
         box={{ left: -70, top: 355, width: 551, height: 846, transform: "rotate(-171.96deg)" }}
         sizes="551px"
         imageStyle={{ objectFit: "cover" }}
+        {...fadeAnim(0.15)}
       />
 
       <MusicButton className="top-5 left-5" />
 
-      <p className="font-qwitcher absolute top-[86px] left-[10px] text-[54.716px] leading-[65.659px] tracking-[-1.3679px]">
+      {/* Groom info block */}
+      <motion.p
+        className="font-qwitcher absolute top-[86px] left-[10px] text-[54.716px] leading-[65.659px] tracking-[-1.3679px]"
+        {...anim(0.2)}
+      >
         The Groom
-      </p>
-      <div className="font-playfair absolute top-[151px] left-[17px] text-[25px] leading-9 tracking-[0.7606px]">
+      </motion.p>
+      <motion.div
+        className="font-playfair absolute top-[151px] left-[17px] text-[25px] leading-9 tracking-[0.7606px]"
+        {...anim(0.25)}
+      >
         <p>Faiz</p>
         <p>Ardisyahputra</p>
-      </div>
-      <div className="font-literata absolute top-[238px] left-[17px] leading-[19.512px] tracking-[0.4122px]">
+      </motion.div>
+      <motion.div
+        className="font-literata absolute top-[238px] left-[17px] leading-[19.512px] tracking-[0.4122px]"
+        {...anim(0.3)}
+      >
         <p className="text-[10.577px]">son of</p>
         <p className="text-[13.55px]">Nurhayati Fauzi</p>
         <p className="text-[13.55px]">&amp; Bayu Praditpa</p>
-      </div>
+      </motion.div>
 
       <Portrait
         side="groom"
@@ -107,6 +138,7 @@ export default function GroomBrideSection() {
         box={{ left: -65, top: 357, width: 498, height: 112 }}
         imageBox={{ left: "-0.04%", top: "-346.43%", width: "100.08%", height: "791.07%" }}
         sizes="498px"
+        {...anim(0.4)}
       />
 
       <Portrait
@@ -116,19 +148,29 @@ export default function GroomBrideSection() {
         branch={assets.brideBranch}
       />
 
-      <p className="font-qwitcher absolute top-[515px] left-[216px] text-[54.716px] leading-[65.659px] tracking-[-1.3679px]">
+      {/* Bride info block */}
+      <motion.p
+        className="font-qwitcher absolute top-[515px] left-[216px] text-[54.716px] leading-[65.659px] tracking-[-1.3679px]"
+        {...anim(0.45)}
+      >
         The Bride
-      </p>
-      <div className="font-playfair absolute top-[574px] left-[215px] text-[25px] leading-9 tracking-[0.7606px]">
+      </motion.p>
+      <motion.div
+        className="font-playfair absolute top-[574px] left-[215px] text-[25px] leading-9 tracking-[0.7606px]"
+        {...anim(0.5)}
+      >
         <p>Pramesthi</p>
         <p>Wahyuring</p>
         <p>Kinasih</p>
-      </div>
-      <div className="font-literata absolute top-[696px] left-[215px] leading-[19.512px] tracking-[0.4122px]">
+      </motion.div>
+      <motion.div
+        className="font-literata absolute top-[696px] left-[215px] leading-[19.512px] tracking-[0.4122px]"
+        {...anim(0.55)}
+      >
         <p className="text-[10.577px]">daughter of</p>
         <p className="text-[13.55px]">Tri Wahjoedi</p>
         <p className="text-[13.55px]">&amp; Riring Isyunani</p>
-      </div>
+      </motion.div>
     </StorySection>
   );
 }
