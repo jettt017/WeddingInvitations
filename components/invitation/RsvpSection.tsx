@@ -6,8 +6,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import MusicButton from "@/components/invitation/MusicButton";
+import RsvpCelebration from "@/components/invitation/RsvpCelebration";
 import StorySection from "@/components/invitation/StorySection";
 import { type RsvpFormValue, STORY_ASSETS, validateRsvp } from "@/lib/invitation-story";
+import { RSVP_SUCCESS_DURATION_MS } from "@/lib/rsvp-celebration";
 import { supabase } from "@/lib/supabase";
 
 interface RsvpSectionProps {
@@ -192,7 +194,7 @@ function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "int
                 >
                   <p className="font-playfair text-[13px] font-bold text-[#453F2F]">{w.name}</p>
                   <p className="font-literata text-[12px] leading-[17px] text-[#62483E] mt-1.5 whitespace-pre-line italic">
-                    "{w.wishes}"
+                    &ldquo;{w.wishes}&rdquo;
                   </p>
                 </motion.div>
               ))
@@ -241,33 +243,38 @@ function RsvpSuccess() {
   }, []);
 
   return (
-    <motion.div
-      ref={successRef}
-      role="status"
-      aria-live="polite"
-      tabIndex={-1}
-      initial={{ opacity: 0, scale: 0.94, y: 15, filter: "blur(3px)" }}
-      animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="font-playfair absolute top-[235px] left-1/2 w-[310px] -translate-x-1/2 rounded-[28px] bg-[#D6C8B6]/90 px-7 py-10 text-center shadow-lg overflow-hidden"
-    >
-      <h2 className="text-[34px] text-[#453F2F]">Thank You</h2>
-      <p className="mt-4 text-[15px] leading-6 text-[#453F2F]/95">Your RSVP has been received.</p>
-      
-      <p className="mt-6 text-[10px] font-sans tracking-[0.2em] text-[#7C5649] uppercase font-bold animate-pulse">
-        Returning to invitation...
-      </p>
+    <>
+      <RsvpCelebration />
+      <motion.div
+        ref={successRef}
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+        initial={{ opacity: 0, scale: 0.94, y: 15, filter: "blur(3px)" }}
+        animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="font-playfair absolute top-[235px] left-1/2 z-20 w-[310px] -translate-x-1/2 overflow-hidden rounded-[28px] bg-[#D6C8B6]/90 px-7 py-10 text-center shadow-lg"
+      >
+        <h2 className="text-[34px] text-[#453F2F]">Thank You</h2>
+        <p className="mt-4 text-[15px] leading-6 text-[#453F2F]/95">
+          Your RSVP has been received.
+        </p>
 
-      {/* Progress Bar / Countdown Loader */}
-      <div className="absolute bottom-0 left-0 w-full h-[4px] bg-[#7C5649]/20 rounded-b-[28px] overflow-hidden">
-        <motion.div
-          initial={{ width: "100%" }}
-          animate={{ width: "0%" }}
-          transition={{ duration: 3.5, ease: "linear" }}
-          className="h-full bg-[#7C5649]"
-        />
-      </div>
-    </motion.div>
+        <p className="mt-6 animate-pulse font-sans text-[10px] font-bold tracking-[0.2em] text-[#7C5649] uppercase">
+          Returning to invitation...
+        </p>
+
+        {/* Progress Bar / Countdown Loader */}
+        <div className="absolute bottom-0 left-0 h-[4px] w-full overflow-hidden rounded-b-[28px] bg-[#7C5649]/20">
+          <motion.div
+            initial={{ width: "100%" }}
+            animate={{ width: "0%" }}
+            transition={{ duration: RSVP_SUCCESS_DURATION_MS / 1_000, ease: "linear" }}
+            className="h-full bg-[#7C5649]"
+          />
+        </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -297,7 +304,7 @@ export function RsvpForm({
     if (mode === "success") {
       const timer = setTimeout(() => {
         onClose();
-      }, 3500); // 3.5 seconds auto-redirect
+      }, RSVP_SUCCESS_DURATION_MS);
       return () => clearTimeout(timer);
     }
   }, [mode, onClose]);
