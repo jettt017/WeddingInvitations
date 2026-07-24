@@ -35,7 +35,7 @@ function Portrait({
   const left = isGroom ? 215 : 17;
   const top = isGroom ? 56 : 497;
   const photoBox = isGroom
-    ? { left: -178, top: -282, width: 490, height: 734 }
+    ? { left: -192, top: -190, width: 490, height: 734 }
     : { left: -99, top: -93, width: 343, height: 513 };
 
   return (

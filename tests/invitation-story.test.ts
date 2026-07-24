@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { stat } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 
 async function loadStoryModule() {
@@ -216,4 +218,19 @@ test("photo slots record meaningful local fallbacks and their final replacement 
     ["50% 63%", "50% 52%"]
   );
   assert.match(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src, /gallery\/collage\.webp$/);
+});
+
+test("groom portrait uses a compressed local asset", async () => {
+  const story = await loadStoryModule();
+  const groomPhoto = story.STORY_ASSETS.groomBride.groomPhoto;
+
+  assert.match(groomPhoto, /groom-photo\.webp$/);
+
+  const groomPhotoPath = path.join(process.cwd(), "public", groomPhoto.replace(/^\//, ""));
+  const groomPhotoStats = await stat(groomPhotoPath);
+
+  assert.ok(
+    groomPhotoStats.size <= 1_000_000,
+    `expected groom portrait to be at most 1 MB, received ${groomPhotoStats.size} bytes`
+  );
 });

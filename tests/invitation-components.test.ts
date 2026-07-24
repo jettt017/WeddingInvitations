@@ -60,7 +60,7 @@ test("opening the invitation renders the complete story instead of only MainScre
   const source = await readSource("../components/InvitationExperience.tsx");
 
   assert.match(source, /import InvitationStory/);
-  assert.match(source, /<InvitationStory\s*\/>/);
+  assert.match(source, /<InvitationStory\b/);
   assert.doesNotMatch(source, /import MainScreen/);
 });
 
@@ -151,6 +151,15 @@ test("couple cover and gallery preview render configured photos without placehol
   assert.doesNotMatch(source, /photo placeholder/i);
   assert.doesNotMatch(gallerySource, /bg-black/);
   assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
+});
+
+test("groom portrait crop keeps the face centered inside the arch", async () => {
+  const source = await readSource("../components/invitation/GroomBrideSection.tsx");
+
+  assert.match(
+    source,
+    /\? \{ left: -192, top: -190, width: 490, height: 734 \}/
+  );
 });
 
 test("document metadata matches Kinan and Faiz on 16 August 2026", async () => {
