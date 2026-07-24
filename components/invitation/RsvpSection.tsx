@@ -23,16 +23,16 @@ interface RsvpSectionProps {
 const transition = { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const };
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -43,7 +43,13 @@ interface Wish {
   created_at: string;
 }
 
-function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "intro" | "form" | "success" }) {
+function RsvpIntro({
+  onOpen,
+  rsvpState,
+}: {
+  onOpen: () => void;
+  rsvpState?: "intro" | "form" | "success";
+}) {
   const assets = STORY_ASSETS.rsvp;
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,17 +178,21 @@ function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "int
         />
 
         {/* Wishes List overlay in the empty space below the RSVP button */}
-        <div className="absolute top-[480px] left-[25px] w-[343px] h-[330px] flex flex-col z-20 text-[#453F2F]">
-          <h3 className="font-playfair text-[18px] text-center tracking-[0.05em] uppercase font-bold">
+        <div className="absolute top-[480px] left-[25px] z-20 flex h-[330px] w-[343px] flex-col text-[#453F2F]">
+          <h3 className="font-playfair text-center text-[18px] font-bold tracking-[0.05em] uppercase">
             Wishes & Prayers
           </h3>
-          <div className="w-16 h-[0.5px] bg-[#7C5649]/40 mx-auto mt-1 mb-4" />
-          
-          <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-2 pb-6 space-y-3.5">
+          <div className="mx-auto mt-1 mb-4 h-[0.5px] w-16 bg-[#7C5649]/40" />
+
+          <div className="flex-1 [scrollbar-width:none] space-y-3.5 overflow-y-auto px-2 pb-6 [&::-webkit-scrollbar]:hidden">
             {loading ? (
-              <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Loading wishes...</p>
+              <p className="font-literata mt-8 text-center text-xs text-[#7C5649]/60 italic">
+                Loading wishes...
+              </p>
             ) : wishes.length === 0 ? (
-              <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Be the first to leave a wish!</p>
+              <p className="font-literata mt-8 text-center text-xs text-[#7C5649]/60 italic">
+                Be the first to leave a wish!
+              </p>
             ) : (
               wishes.map((w, index) => (
                 <motion.div
@@ -190,10 +200,10 @@ function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "int
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
-                  className="bg-[#D6C8B6]/30 border border-[#7C5649]/10 rounded-[12px] p-3 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]"
+                  className="rounded-[12px] border border-[#7C5649]/10 bg-[#D6C8B6]/30 p-3 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]"
                 >
                   <p className="font-playfair text-[13px] font-bold text-[#453F2F]">{w.name}</p>
-                  <p className="font-literata text-[12px] leading-[17px] text-[#62483E] mt-1.5 whitespace-pre-line italic">
+                  <p className="font-literata mt-1.5 text-[12px] leading-[17px] whitespace-pre-line text-[#62483E] italic">
                     &ldquo;{w.wishes}&rdquo;
                   </p>
                 </motion.div>
@@ -204,7 +214,8 @@ function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "int
       </div>
     </StorySection>
   );
-}const containerVariants = {
+}
+const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -256,11 +267,9 @@ function RsvpSuccess() {
         className="font-playfair absolute top-[235px] left-1/2 z-20 w-[310px] -translate-x-1/2 overflow-hidden rounded-[28px] bg-[#D6C8B6]/90 px-7 py-10 text-center shadow-lg"
       >
         <h2 className="text-[34px] text-[#453F2F]">Thank You</h2>
-        <p className="mt-4 text-[15px] leading-6 text-[#453F2F]/95">
-          Your RSVP has been received.
-        </p>
+        <p className="mt-4 text-[15px] leading-6 text-[#453F2F]/95">Your RSVP has been received.</p>
 
-        <p className="mt-6 animate-pulse font-sans text-[10px] font-bold tracking-[0.2em] text-[#7C5649] uppercase">
+        <p className="mt-6 animate-pulse font-sans text-[10px] font-bold tracking-[0.2em] text-[#7C5649] uppercase motion-reduce:animate-none">
           Returning to invitation...
         </p>
 
@@ -294,7 +303,12 @@ export function RsvpForm({
   const nameErrorId = `${formId}-name-error`;
   const guestsErrorId = `${formId}-guests-error`;
   const attendanceRef = useRef<HTMLSelectElement>(null);
-  const [value, setValue] = useState<RsvpFormValue>({ attendance: "", name: "", guests: 1, wishes: "" });
+  const [value, setValue] = useState<RsvpFormValue>({
+    attendance: "",
+    name: "",
+    guests: 1,
+    wishes: "",
+  });
   const [errors, setErrors] = useState<ReturnType<typeof validateRsvp>>({});
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -342,7 +356,7 @@ export function RsvpForm({
           variants={bgVariants}
           initial="hidden"
           animate="visible"
-          className="absolute inset-0 z-0 select-none pointer-events-none"
+          className="pointer-events-none absolute inset-0 z-0 select-none"
         >
           <DecorativeImage
             src={assets.topVines}
@@ -378,7 +392,7 @@ export function RsvpForm({
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-5 left-5 z-30 size-[34px] rounded-full hover:scale-105 active:scale-95 transition-transform"
+          className="absolute top-5 left-5 z-30 size-[34px] rounded-full transition-transform hover:scale-105 active:scale-95"
         >
           <Image src={STORY_ASSETS.gallery.backIcon} alt="" fill sizes="34px" />
         </motion.button>
@@ -416,7 +430,7 @@ export function RsvpForm({
             </motion.p>
             <motion.div
               variants={itemVariants}
-              className="absolute top-[194px] left-[101px] w-[191px] h-[21px]"
+              className="absolute top-[194px] left-[101px] h-[21px] w-[191px]"
             >
               <DecorativeImage
                 src={assets.headingFlourish}
@@ -427,7 +441,10 @@ export function RsvpForm({
             </motion.div>
 
             <form onSubmit={handleSubmit} className="absolute top-[236px] left-[25px] w-[343px]">
-              <motion.label variants={itemVariants} className="font-playfair block text-[15px] text-[#453F2F]">
+              <motion.label
+                variants={itemVariants}
+                className="font-playfair block text-[15px] text-[#453F2F]"
+              >
                 Your Response:
                 <select
                   ref={attendanceRef}
@@ -440,7 +457,7 @@ export function RsvpForm({
                   }
                   aria-invalid={Boolean(errors.attendance)}
                   aria-describedby={errors.attendance ? attendanceErrorId : undefined}
-                  className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] transition-shadow duration-300"
+                  className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
                 >
                   <option value="">Select response</option>
                   <option value="attending">Joyfully attending</option>
@@ -453,7 +470,10 @@ export function RsvpForm({
                 </p>
               ) : null}
 
-              <motion.label variants={itemVariants} className="font-playfair mt-4 block text-[15px] text-[#453F2F]">
+              <motion.label
+                variants={itemVariants}
+                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+              >
                 Name of guest:
                 <input
                   value={value.name}
@@ -462,7 +482,7 @@ export function RsvpForm({
                   }
                   aria-invalid={Boolean(errors.name)}
                   aria-describedby={errors.name ? nameErrorId : undefined}
-                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] transition-shadow duration-300"
+                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
                 />
               </motion.label>
               {errors.name ? (
@@ -471,7 +491,10 @@ export function RsvpForm({
                 </p>
               ) : null}
 
-              <motion.label variants={itemVariants} className="font-playfair mt-4 block text-[15px] text-[#453F2F]">
+              <motion.label
+                variants={itemVariants}
+                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+              >
                 Number of guests:
                 <input
                   type="number"
@@ -483,7 +506,7 @@ export function RsvpForm({
                   }
                   aria-invalid={Boolean(errors.guests)}
                   aria-describedby={errors.guests ? guestsErrorId : undefined}
-                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] transition-shadow duration-300"
+                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
                 />
               </motion.label>
               {errors.guests ? (
@@ -492,7 +515,10 @@ export function RsvpForm({
                 </p>
               ) : null}
 
-              <motion.label variants={itemVariants} className="font-playfair mt-4 block text-[15px] text-[#453F2F]">
+              <motion.label
+                variants={itemVariants}
+                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+              >
                 Wishes & Prayers:
                 <textarea
                   rows={2}
@@ -500,7 +526,7 @@ export function RsvpForm({
                   onChange={(event) =>
                     setValue((current) => ({ ...current, wishes: event.target.value }))
                   }
-                  className="mt-3 w-full rounded-[18px] bg-[#D6C8B6] px-5 py-3 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] transition-shadow duration-300 resize-none font-sans text-sm"
+                  className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
                   placeholder="Leave a message for Kinan & Faiz..."
                 />
               </motion.label>
@@ -511,7 +537,7 @@ export function RsvpForm({
                 whileTap={{ scale: 0.985 }}
                 type="submit"
                 disabled={!isConfigured || isSubmitting}
-                className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white disabled:cursor-not-allowed disabled:opacity-70 transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] shadow-md"
+                className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting ? "SENDING..." : "CONFIRM"}
               </motion.button>
@@ -530,11 +556,29 @@ export function RsvpForm({
         )}
         {isSubmitting && (
           <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#FAEBE0]/80 backdrop-blur-[1.5px]">
-            <svg className="animate-spin h-10 w-10 text-[#7C5649] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              className="mb-4 h-10 w-10 animate-spin text-[#7C5649] motion-reduce:animate-none"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="3"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
-            <p className="font-playfair text-[15px] tracking-widest text-[#7C5649] font-medium uppercase animate-pulse">Saving response...</p>
+            <p className="font-playfair animate-pulse text-[15px] font-medium tracking-widest text-[#7C5649] uppercase motion-reduce:animate-none">
+              Saving response...
+            </p>
           </div>
         )}
       </div>
@@ -542,7 +586,13 @@ export function RsvpForm({
   );
 }
 
-export default function RsvpSection({ mode, onOpen, onSubmitted, onClose, rsvpState }: RsvpSectionProps) {
+export default function RsvpSection({
+  mode,
+  onOpen,
+  onSubmitted,
+  onClose,
+  rsvpState,
+}: RsvpSectionProps) {
   const shouldReduceMotion = useReducedMotion();
 
   return (

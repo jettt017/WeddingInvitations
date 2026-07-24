@@ -8,7 +8,6 @@ import {
   Playfair_Display,
   Qwitcher_Grypen,
 } from "next/font/google";
-import { LenisProvider } from "@/components/providers/lenis-provider";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -88,9 +87,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className="bg-brand-cream text-brand-charcoal selection:bg-brand-gold selection:text-brand-emerald flex min-h-full flex-col"
       >
-        <LenisProvider>
-          <main className="flex flex-grow flex-col">{children}</main>
-        </LenisProvider>
+        <main className="flex flex-grow flex-col">{children}</main>
       </body>
     </html>
   );

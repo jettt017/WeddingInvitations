@@ -13,8 +13,6 @@ interface DecorativeImageProps extends MotionProps {
   priority?: boolean;
 }
 
-const positioningKeys = ["position", "left", "right", "top", "bottom", "width", "height", "zIndex"];
-
 export default function DecorativeImage({
   src,
   alt = "",
@@ -26,24 +24,30 @@ export default function DecorativeImage({
   priority = false,
   ...motionProps
 }: DecorativeImageProps) {
-  const positioning: CSSProperties = { position: "absolute" };
-  const styling: CSSProperties = {};
-
-  if (box) {
-    Object.entries(box).forEach(([key, value]) => {
-      if (positioningKeys.includes(key)) {
-        (positioning as any)[key] = value;
-      } else {
-        (styling as any)[key] = value;
-      }
-    });
-  }
+  const {
+    position = "absolute",
+    left,
+    right,
+    top,
+    bottom,
+    width,
+    height,
+    zIndex,
+    ...styling
+  } = box;
+  const positioning: CSSProperties = {
+    position,
+    left,
+    right,
+    top,
+    bottom,
+    width,
+    height,
+    zIndex,
+  };
 
   return (
-    <motion.div
-      style={positioning}
-      {...motionProps}
-    >
+    <motion.div style={positioning} {...motionProps}>
       <div
         aria-hidden={alt ? undefined : true}
         className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}

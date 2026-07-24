@@ -1,4 +1,5 @@
 export const RSVP_SUCCESS_DURATION_MS = 3_500;
+export const RSVP_ANIMATED_PETAL_COUNT = 24;
 
 export interface RsvpCelebrationPetal {
   id: string;
@@ -104,28 +105,23 @@ const RIGHT_PETAL_SEEDS = [
   [28, 342, 49, 748, -485, 8],
 ] as const satisfies readonly PetalSeed[];
 
-function createPetals(
-  side: PetalSide,
-  seeds: readonly PetalSeed[]
-): RsvpCelebrationPetal[] {
+function createPetals(side: PetalSide, seeds: readonly PetalSeed[]): RsvpCelebrationPetal[] {
   const isLeft = side === "left";
 
-  return seeds.map(
-    ([apexX, apexY, landingX, landingY, rotation, size], index) => ({
-      id: `petal-${side}-${String(index + 1).padStart(2, "0")}`,
-      startX: isLeft ? 18 + (index % 3) * 13 : 375 - (index % 3) * 13,
-      startY: 768 + (index % 4) * 8,
-      apexX,
-      apexY,
-      landingX,
-      landingY,
-      rotation,
-      size,
-      color: PETAL_COLORS[(index + (isLeft ? 0 : 3)) % PETAL_COLORS.length],
-      delay: (index % 5) * 0.035 + (isLeft ? 0 : 0.02),
-      duration: 2.36 + (index % 4) * 0.08,
-    })
-  );
+  return seeds.map(([apexX, apexY, landingX, landingY, rotation, size], index) => ({
+    id: `petal-${side}-${String(index + 1).padStart(2, "0")}`,
+    startX: isLeft ? 18 + (index % 3) * 13 : 375 - (index % 3) * 13,
+    startY: 768 + (index % 4) * 8,
+    apexX,
+    apexY,
+    landingX,
+    landingY,
+    rotation,
+    size,
+    color: PETAL_COLORS[(index + (isLeft ? 0 : 3)) % PETAL_COLORS.length],
+    delay: (index % 5) * 0.035 + (isLeft ? 0 : 0.02),
+    duration: 2.36 + (index % 4) * 0.08,
+  }));
 }
 
 export const RSVP_CELEBRATION_PETALS = [

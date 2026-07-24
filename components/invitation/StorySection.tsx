@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import { STORY_ASSETS } from "@/lib/invitation-story";
@@ -22,7 +21,12 @@ export default function StorySection({
   return (
     <section
       className={`relative left-1/2 w-[393px] shrink-0 -translate-x-1/2 overflow-hidden bg-[#FAEBE0] text-black ${className}`}
-      style={{ height }}
+      style={{
+        height,
+        contain: "layout paint",
+        contentVisibility: "auto",
+        containIntrinsicSize: `393px ${height}px`,
+      }}
       data-figma-node={figmaNode}
       data-section={section}
     >

@@ -14,6 +14,7 @@ test("RSVP flower celebration shoots and settles before the success window close
   const config = await loadCelebrationConfig();
 
   assert.equal(config.RSVP_SUCCESS_DURATION_MS, 3_500);
+  assert.equal(config.RSVP_ANIMATED_PETAL_COUNT, 24);
   assert.ok(Array.isArray(config.RSVP_CELEBRATION_PETALS));
   if (!Array.isArray(config.RSVP_CELEBRATION_PETALS)) return;
 
@@ -102,7 +103,8 @@ test("RSVP success mounts an accessible reduced-motion floral celebration", asyn
   assert.match(celebrationSource, /aria-hidden="true"/);
   assert.match(celebrationSource, /pointer-events-none/);
   assert.match(celebrationSource, /STORY_ASSETS\.groomBride\.portraitFlowers/);
-  assert.match(celebrationSource, /RSVP_CELEBRATION_PETALS\.map/);
+  assert.match(celebrationSource, /settledPetals\.map/);
+  assert.match(celebrationSource, /animatedPetals\.map/);
   assert.match(celebrationSource, /CANNON_RAYS\.map/);
   assert.match(celebrationSource, /data-rsvp-cannon/);
   assert.match(celebrationSource, /z-\[44\]/);
@@ -111,6 +113,8 @@ test("RSVP success mounts an accessible reduced-motion floral celebration", asyn
   assert.match(celebrationSource, /import RsvpFloralBrush/);
   assert.match(celebrationSource, /<RsvpFloralBrush/);
   assert.match(celebrationSource, /data-rsvp-petal/);
+  assert.match(celebrationSource, /RSVP_ANIMATED_PETAL_COUNT/);
+  assert.match(celebrationSource, /\.slice\(0, RSVP_ANIMATED_PETAL_COUNT\)/);
   assert.match(celebrationSource, /opacity: \[0, 1, 1, 1, 1\]/);
   assert.match(celebrationSource, /petal\.landingX/);
   assert.match(celebrationSource, /petal\.landingY/);
@@ -122,7 +126,12 @@ test("RSVP success mounts an accessible reduced-motion floral celebration", asyn
   assert.match(brushSource, /STORY_ASSETS\.groomBride\.portraitFlowers/);
   assert.match(brushSource, /STORY_ASSETS\.groomBride\.groomBranch/);
   assert.match(brushSource, /STORY_ASSETS\.rsvpForm\.topVines/);
-  assert.match(brushSource, /clipPath/);
+  assert.equal(
+    brushSource.match(/<motion\./g)?.length ?? 0,
+    1,
+    "the dense floral brush should animate as one composited layer"
+  );
+  assert.doesNotMatch(brushSource, /clipPath/);
   assert.doesNotMatch(celebrationSource, /Math\.random/);
   assert.doesNotMatch(brushSource, /Math\.random/);
 });

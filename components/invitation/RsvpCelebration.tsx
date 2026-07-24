@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import RsvpFloralBrush from "@/components/invitation/RsvpFloralBrush";
 import { STORY_ASSETS } from "@/lib/invitation-story";
-import { RSVP_CELEBRATION_PETALS } from "@/lib/rsvp-celebration";
+import { RSVP_ANIMATED_PETAL_COUNT, RSVP_CELEBRATION_PETALS } from "@/lib/rsvp-celebration";
 
 const celebrationEase = [0.16, 1, 0.3, 1] as const;
 const CANNON_RAYS = [-86, -78, -70, -62, -54, -46, -38, -30, -22, -14] as const;
@@ -16,9 +16,7 @@ function CannonBurst({ side }: { side: "left" | "right" }) {
   return (
     <div
       data-rsvp-cannon={side}
-      className={`absolute top-[738px] z-[44] size-px ${
-        isLeft ? "left-[19px]" : "right-[19px]"
-      }`}
+      className={`absolute top-[738px] z-[44] size-px ${isLeft ? "left-[19px]" : "right-[19px]"}`}
     >
       <motion.span
         initial={{ opacity: 0, scale: 0.2 }}
@@ -87,12 +85,7 @@ function FlowerCluster({
               opacity: [0, 1, 1, 1],
               x: [isLeft ? -92 : 92, isLeft ? 6 : -6, 0, 0],
               y: [54, -10, 3, 0],
-              rotate: [
-                isLeft ? -18 : 18,
-                isLeft ? 1 : -1,
-                isLeft ? -6 : 6,
-                isLeft ? -4 : 4,
-              ],
+              rotate: [isLeft ? -18 : 18, isLeft ? 1 : -1, isLeft ? -6 : 6, isLeft ? -4 : 4],
               scale: [0.32, 1.18, 0.96, 1],
             }
       }
@@ -115,9 +108,9 @@ function FlowerCluster({
           src={STORY_ASSETS.groomBride.portraitFlowers}
           alt=""
           fill
-          sizes="290px"
+          sizes="(max-width: 393px) 73.79vw, 290px"
           draggable={false}
-          className="select-none object-cover object-center"
+          className="object-cover object-center select-none"
         />
       </div>
     </motion.div>
@@ -126,6 +119,12 @@ function FlowerCluster({
 
 export default function RsvpCelebration() {
   const shouldReduceMotion = Boolean(useReducedMotion());
+  const animatedPetals = shouldReduceMotion
+    ? []
+    : RSVP_CELEBRATION_PETALS.slice(0, RSVP_ANIMATED_PETAL_COUNT);
+  const settledPetals = shouldReduceMotion
+    ? RSVP_CELEBRATION_PETALS
+    : RSVP_CELEBRATION_PETALS.slice(RSVP_ANIMATED_PETAL_COUNT);
 
   return (
     <div
@@ -160,7 +159,26 @@ export default function RsvpCelebration() {
         </>
       ) : null}
 
-      {RSVP_CELEBRATION_PETALS.map((petal, index) => {
+      {settledPetals.map((petal, index) => (
+        <span
+          data-rsvp-petal={petal.id}
+          data-rsvp-petal-state="settled"
+          key={petal.id}
+          className="absolute block rounded-[80%_0_80%_0] border border-white/25 shadow-[0_2px_5px_rgba(91,76,54,0.22)]"
+          style={{
+            left: petal.landingX,
+            top: petal.landingY,
+            width: petal.size,
+            height: petal.size * 0.58,
+            backgroundColor: petal.color,
+            opacity: 0.72,
+            transform: `rotate(${petal.rotation}deg) scale(0.84)`,
+            zIndex: 46 + ((index + RSVP_ANIMATED_PETAL_COUNT) % 7),
+          }}
+        />
+      ))}
+
+      {animatedPetals.map((petal, index) => {
         const apexX = petal.apexX - petal.startX;
         const apexY = petal.apexY - petal.startY;
         const landingX = petal.landingX - petal.startX;
@@ -169,51 +187,32 @@ export default function RsvpCelebration() {
         return (
           <motion.span
             data-rsvp-petal={petal.id}
+            data-rsvp-petal-state="animated"
             key={petal.id}
-            initial={
-              shouldReduceMotion
-                ? false
-                : {
-                    opacity: 0,
-                    scale: 0.25,
-                    rotate: 0,
-                  }
-            }
-            animate={
-              shouldReduceMotion
-                ? {
-                    opacity: 0.72,
-                    scale: 0.84,
-                    rotate: petal.rotation,
-                  }
-                : {
-                    opacity: [0, 1, 1, 1, 1],
-                    x: [0, apexX * 0.72, apexX, landingX, landingX],
-                    y: [0, apexY * 0.72, apexY, landingY - 11, landingY],
-                    rotate: [
-                      0,
-                      petal.rotation * 0.34,
-                      petal.rotation * 0.68,
-                      petal.rotation * 0.96,
-                      petal.rotation,
-                    ],
-                    scale: [0.25, 1.24, 1, 0.9, 0.84],
-                  }
-            }
-            transition={
-              shouldReduceMotion
-                ? { duration: 0 }
-                : {
-                    duration: petal.duration,
-                    delay: petal.delay,
-                    times: [0, 0.16, 0.38, 0.86, 1],
-                    ease: "easeOut",
-                  }
-            }
+            initial={{ opacity: 0, scale: 0.25, rotate: 0 }}
+            animate={{
+              opacity: [0, 1, 1, 1, 1],
+              x: [0, apexX * 0.72, apexX, landingX, landingX],
+              y: [0, apexY * 0.72, apexY, landingY - 11, landingY],
+              rotate: [
+                0,
+                petal.rotation * 0.34,
+                petal.rotation * 0.68,
+                petal.rotation * 0.96,
+                petal.rotation,
+              ],
+              scale: [0.25, 1.24, 1, 0.9, 0.84],
+            }}
+            transition={{
+              duration: petal.duration,
+              delay: petal.delay,
+              times: [0, 0.16, 0.38, 0.86, 1],
+              ease: "easeOut",
+            }}
             className="absolute block rounded-[80%_0_80%_0] border border-white/25 shadow-[0_2px_5px_rgba(91,76,54,0.22)]"
             style={{
-              left: shouldReduceMotion ? petal.landingX : petal.startX,
-              top: shouldReduceMotion ? petal.landingY : petal.startY,
+              left: petal.startX,
+              top: petal.startY,
               width: petal.size,
               height: petal.size * 0.58,
               backgroundColor: petal.color,

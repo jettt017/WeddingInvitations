@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer, useSyncExternalStore } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
 
 import InvitationStory from "@/components/invitation/InvitationStory";
 import { RsvpForm } from "@/components/invitation/RsvpSection";
@@ -45,55 +45,68 @@ export default function InvitationExperience() {
   const scale = calculateInvitationScale(viewportWidth);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden lg:h-full">
-      <AnimatePresence mode="wait">
-        {view === "splash" ? (
-          <motion.div
-            key="splash"
-            className="absolute inset-0"
-            exit={{
-              opacity: 0,
-              scale: shouldReduceMotion ? 1 : 1.025,
-            }}
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.6,
-              ease: transitionEase,
-            }}
-          >
-            <HeroBackground onOpen={() => dispatch({ type: "open" })} />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="main"
-            role="region"
-            aria-labelledby="main-screen-title"
-            tabIndex={0}
-            data-lenis-prevent=""
-            className="focus-visible:ring-brand-gold-dark absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
-            initial={{
-              opacity: 0,
-              y: shouldReduceMotion ? 0 : 18,
-            }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: shouldReduceMotion ? 0 : 0.8,
-              ease: transitionEase,
-            }}
-          >
-            <InvitationStory interaction={interaction} dispatch={dispatchInteraction} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Fullscreen scaled RSVP Form Overlay */}
-      <AnimatePresence>
-        {view === "main" &&
-          (interaction.rsvp === "form" || interaction.rsvp === "success") && (
+    <MotionConfig reducedMotion="user">
+      <div className="relative h-dvh w-full overflow-hidden lg:h-full">
+        <AnimatePresence mode="wait">
+          {view === "splash" ? (
             <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.985, filter: "blur(3px)" }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: 20, scale: 0.99, filter: "blur(2px)" }}
-              transition={{ duration: 0.75, ease: transitionEase }}
+              key="splash"
+              className="absolute inset-0"
+              exit={{
+                opacity: 0,
+                scale: shouldReduceMotion ? 1 : 1.025,
+              }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.6,
+                ease: transitionEase,
+              }}
+            >
+              <HeroBackground onOpen={() => dispatch({ type: "open" })} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="main"
+              role="region"
+              aria-labelledby="main-screen-title"
+              tabIndex={0}
+              data-lenis-prevent=""
+              className="focus-visible:ring-brand-gold-dark absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
+              initial={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 18,
+              }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.8,
+                ease: transitionEase,
+              }}
+            >
+              <InvitationStory interaction={interaction} dispatch={dispatchInteraction} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Fullscreen scaled RSVP Form Overlay */}
+        <AnimatePresence>
+          {view === "main" && (interaction.rsvp === "form" || interaction.rsvp === "success") && (
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 30,
+                scale: shouldReduceMotion ? 1 : 0.985,
+                filter: shouldReduceMotion ? "none" : "blur(3px)",
+              }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "none" }}
+              exit={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 20,
+                scale: shouldReduceMotion ? 1 : 0.99,
+                filter: shouldReduceMotion ? "none" : "blur(2px)",
+              }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.75,
+                ease: transitionEase,
+              }}
               className="absolute inset-0 z-50 flex items-center justify-center bg-[#FAEBE0]"
             >
               <div
@@ -121,7 +134,8 @@ export default function InvitationExperience() {
               </div>
             </motion.div>
           )}
-      </AnimatePresence>
-    </div>
+        </AnimatePresence>
+      </div>
+    </MotionConfig>
   );
 }

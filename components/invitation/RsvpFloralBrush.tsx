@@ -12,6 +12,8 @@ import {
 } from "@/lib/rsvp-celebration";
 
 const brushEase = [0.16, 1, 0.3, 1] as const;
+const canvasImageSizes = (width: number) =>
+  `(max-width: 393px) ${((width / 393) * 100).toFixed(2)}vw, ${width}px`;
 
 interface BrushImageLayer {
   id: string;
@@ -144,44 +146,12 @@ const BRUSH_IMAGE_LAYERS: readonly BrushImageLayer[] = [
   },
 ];
 
-function BrushBloom({
-  bloom,
-  shouldReduceMotion,
-}: {
-  bloom: RsvpFloralBrushBloom;
-  shouldReduceMotion: boolean;
-}) {
+function BrushBloom({ bloom }: { bloom: RsvpFloralBrushBloom }) {
   const petals = Array.from({ length: bloom.petalCount });
 
   return (
-    <motion.div
+    <div
       data-rsvp-brush-bloom={bloom.id}
-      initial={
-        shouldReduceMotion
-          ? false
-          : {
-              opacity: 0,
-              y: 96,
-              rotate: bloom.rotation - 28,
-              scale: 0.25,
-            }
-      }
-      animate={{
-        opacity: 1,
-        y: 0,
-        rotate: bloom.rotation,
-        scale: shouldReduceMotion ? 1 : [0.25, 1.22, 0.96, 1],
-      }}
-      transition={
-        shouldReduceMotion
-          ? { duration: 0 }
-          : {
-              duration: 0.82,
-              delay: bloom.delay,
-              times: [0, 0.58, 0.82, 1],
-              ease: brushEase,
-            }
-      }
       className="absolute"
       style={{
         left: bloom.x - bloom.size / 2,
@@ -200,9 +170,7 @@ function BrushBloom({
             width: bloom.size * 0.44,
             height: bloom.size * 0.6,
             transformOrigin: "50% 100%",
-            transform: `translate(-50%, -100%) rotate(${
-              (360 / bloom.petalCount) * index
-            }deg)`,
+            transform: `translate(-50%, -100%) rotate(${(360 / bloom.petalCount) * index}deg)`,
             background: `radial-gradient(circle at 50% 100%, ${bloom.centerColor} 0%, ${bloom.petalColor} 42%, ${bloom.petalColor} 100%)`,
             boxShadow: "inset 0 1px 2px rgba(255,255,255,0.48)",
           }}
@@ -217,45 +185,14 @@ function BrushBloom({
           background: `radial-gradient(circle, #F8E6B5 0%, ${bloom.centerColor} 68%, #7C5649 100%)`,
         }}
       />
-    </motion.div>
+    </div>
   );
 }
 
-function BrushLeaf({
-  leaf,
-  shouldReduceMotion,
-}: {
-  leaf: RsvpFloralBrushLeaf;
-  shouldReduceMotion: boolean;
-}) {
+function BrushLeaf({ leaf }: { leaf: RsvpFloralBrushLeaf }) {
   return (
-    <motion.span
+    <span
       data-rsvp-brush-leaf={leaf.id}
-      initial={
-        shouldReduceMotion
-          ? false
-          : {
-              opacity: 0,
-              y: 78,
-              rotate: leaf.rotation - 35,
-              scale: 0.3,
-            }
-      }
-      animate={{
-        opacity: 0.94,
-        y: 0,
-        rotate: leaf.rotation,
-        scale: 1,
-      }}
-      transition={
-        shouldReduceMotion
-          ? { duration: 0 }
-          : {
-              duration: 0.72,
-              delay: leaf.delay,
-              ease: brushEase,
-            }
-      }
       className="absolute rounded-[100%_0_100%_0] border-l border-white/20 shadow-[0_3px_5px_rgba(49,94,43,0.22)]"
       style={{
         left: leaf.x - leaf.width / 2,
@@ -267,15 +204,11 @@ function BrushLeaf({
       }}
     >
       <span className="absolute top-1/2 left-[8%] h-px w-[84%] -translate-y-1/2 rotate-[-3deg] bg-[#E4E0A8]/55" />
-    </motion.span>
+    </span>
   );
 }
 
-export default function RsvpFloralBrush({
-  shouldReduceMotion,
-}: {
-  shouldReduceMotion: boolean;
-}) {
+export default function RsvpFloralBrush({ shouldReduceMotion }: { shouldReduceMotion: boolean }) {
   return (
     <motion.div
       data-rsvp-floral-brush
@@ -283,13 +216,15 @@ export default function RsvpFloralBrush({
         shouldReduceMotion
           ? false
           : {
-              clipPath: "inset(0 100% 0 0)",
-              opacity: 0.4,
+              opacity: 0,
+              y: 84,
+              scale: 0.94,
             }
       }
       animate={{
-        clipPath: "inset(0 0% 0 0)",
         opacity: 1,
+        y: 0,
+        scale: 1,
       }}
       transition={
         shouldReduceMotion
@@ -302,38 +237,16 @@ export default function RsvpFloralBrush({
       className="absolute inset-0"
     >
       {BRUSH_IMAGE_LAYERS.map((layer) => (
-        <motion.div
+        <div
           data-rsvp-brush-image={layer.id}
           key={layer.id}
-          initial={
-            shouldReduceMotion
-              ? false
-              : {
-                  opacity: 0,
-                  y: 135,
-                  scale: 0.72,
-                }
-          }
-          animate={{
-            opacity: layer.opacity,
-            y: 0,
-            scale: 1,
-          }}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : {
-                  duration: 0.95,
-                  delay: layer.delay,
-                  ease: brushEase,
-                }
-          }
           className="absolute"
           style={{
             left: layer.left,
             top: layer.top,
             width: layer.width,
             height: layer.height,
+            opacity: layer.opacity,
           }}
         >
           <div
@@ -346,7 +259,7 @@ export default function RsvpFloralBrush({
               src={layer.src}
               alt=""
               fill
-              sizes={`${layer.width}px`}
+              sizes={canvasImageSizes(layer.width)}
               draggable={false}
               className="select-none"
               style={{
@@ -355,23 +268,15 @@ export default function RsvpFloralBrush({
               }}
             />
           </div>
-        </motion.div>
+        </div>
       ))}
 
       {RSVP_FLORAL_BRUSH_LEAVES.map((leaf) => (
-        <BrushLeaf
-          key={leaf.id}
-          leaf={leaf}
-          shouldReduceMotion={shouldReduceMotion}
-        />
+        <BrushLeaf key={leaf.id} leaf={leaf} />
       ))}
 
       {RSVP_FLORAL_BRUSH_BLOOMS.map((bloom) => (
-        <BrushBloom
-          key={bloom.id}
-          bloom={bloom}
-          shouldReduceMotion={shouldReduceMotion}
-        />
+        <BrushBloom key={bloom.id} bloom={bloom} />
       ))}
     </motion.div>
   );
