@@ -200,12 +200,13 @@ export interface RsvpFormValue {
   attendance: RsvpAttendance;
   name: string;
   guests: number;
+  wishes?: string;
 }
 
 export function validateRsvp(
   value: RsvpFormValue
-): Partial<Record<"attendance" | "name" | "guests", string>> {
-  const errors: Partial<Record<"attendance" | "name" | "guests", string>> = {};
+): Partial<Record<"attendance" | "name" | "guests" | "wishes", string>> {
+  const errors: Partial<Record<"attendance" | "name" | "guests" | "wishes", string>> = {};
 
   if (!value.attendance) errors.attendance = "Please select your response.";
   if (!value.name.trim()) errors.name = "Please enter the guest name.";
