@@ -32,6 +32,7 @@ export default function InvitationStory({ interaction, dispatch }: InvitationSto
             onOpen={() => dispatch({ type: "open_rsvp" })}
             onSubmitted={() => {}}
             onClose={() => {}}
+            rsvpState={interaction.rsvp}
           />
           <GallerySection
             mode={interaction.gallery}
