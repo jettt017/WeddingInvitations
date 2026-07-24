@@ -115,15 +115,15 @@ export default function GroomBrideSection() {
         {...anim(0.25)}
       >
         <p>Faiz</p>
-        <p>Ardisyahputra</p>
+        <p>Ardysyahputra</p>
       </motion.div>
       <motion.div
         className="font-literata absolute top-[238px] left-[17px] leading-[19.512px] tracking-[0.4122px]"
         {...anim(0.3)}
       >
         <p className="text-[10.577px]">son of</p>
-        <p className="text-[13.55px]">Nurhayati Fauzi</p>
-        <p className="text-[13.55px]">&amp; Bayu Praditpa</p>
+        <p className="text-[13.55px]">Supardi</p>
+        <p className="text-[13.55px]">&amp; Jumiati Handayani</p>
       </motion.div>
 
       <Portrait
