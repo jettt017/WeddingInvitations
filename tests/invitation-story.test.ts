@@ -77,10 +77,12 @@ test("countdown never exposes NaN for invalid dates", async () => {
     minutes: 0,
     seconds: 0,
   });
-  assert.deepEqual(
-    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("not-a-date")),
-    { days: 0, hours: 0, minutes: 0, seconds: 0 }
-  );
+  assert.deepEqual(story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("not-a-date")), {
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 });
 
 test("calendar link contains the configured couple date and venue", async () => {
@@ -187,6 +189,8 @@ test("story assets are committed local files rather than temporary Figma URLs", 
   assert.ok(paths.every((path) => path.startsWith("/images/")));
   assert.ok(paths.every((path) => !path.includes("figma.com")));
   assert.ok(paths.some((path) => path.endsWith("gallery/collage.webp")));
+  assert.ok(paths.some((path) => path.endsWith("transaction/logo-mandiri.webp")));
+  assert.ok(paths.some((path) => path.endsWith("transaction/bottom-foliage.webp")));
   assert.ok(paths.some((path) => path.endsWith("thank-you/rings.webp")));
 });
 
@@ -205,19 +209,80 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   assert.ok(photos.every((photo) => photo.alt.trim().length > 0));
   assert.ok(
     photos.every((photo) =>
-      photo.fallbacks.every(
-        (fallback) =>
+      photo.fallbacks.every((fallback) => {
+        const objectPosition =
+          "objectPosition" in fallback
+            ? fallback.objectPosition
+            : "crop" in fallback
+              ? fallback.crop.objectPosition
+              : "";
+
+        return (
           fallback.src.startsWith("/images/") &&
           !fallback.src.includes("figma.com") &&
-          fallback.objectPosition.trim().length > 0
-      )
+          objectPosition.trim().length > 0
+        );
+      })
     )
   );
   assert.deepEqual(
     story.STORY_PHOTOS.coupleCover.fallbacks.map((fallback) => fallback.objectPosition),
     ["50% 63%", "50% 52%"]
   );
-  assert.match(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src, /gallery\/collage\.webp$/);
+  assert.match(
+    story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,
+    /gallery\/gallery-feature-01\.webp$/
+  );
+  assert.match(
+    story.STORY_PHOTOS.galleryFeature02.fallbacks[0].src,
+    /gallery\/gallery-feature-02\.webp$/
+  );
+  assert.match(
+    story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src,
+    /gallery\/gallery-feature-03\.webp$/
+  );
+  assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.objectPosition, "50% 100%");
+  assert.deepEqual(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].crop, {
+    left: "-12.49%",
+    top: "-84.07%",
+    width: "164.42%",
+    height: "256.08%",
+    objectFit: "fill",
+    objectPosition: "50% 50%",
+    sizes: "299px",
+  });
+});
+
+test("updated story height includes the 518 pixel transaction section", async () => {
+  const story = await loadStoryModule();
+
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6_944);
+});
+
+test("new gallery and transaction assets stay lightweight", async () => {
+  const story = await loadStoryModule();
+  const assetPaths = [
+    story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,
+    story.STORY_PHOTOS.galleryFeature02.fallbacks[0].src,
+    story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src,
+    story.STORY_ASSETS.gallery.collage,
+    story.STORY_ASSETS.transaction.topLeaves,
+    story.STORY_ASSETS.transaction.bottomFoliage,
+    story.STORY_ASSETS.transaction.paperTear,
+    story.STORY_ASSETS.transaction.mandiriLogo,
+    story.STORY_ASSETS.transaction.briLogo,
+    story.STORY_ASSETS.transaction.bcaLogo,
+  ];
+
+  for (const assetPath of assetPaths) {
+    const filePath = path.join(process.cwd(), "public", assetPath.replace(/^\//, ""));
+    const fileStats = await stat(filePath);
+
+    assert.ok(
+      fileStats.size <= 250_000,
+      `expected ${assetPath} to be at most 250 KB, received ${fileStats.size} bytes`
+    );
+  }
 });
 
 test("groom portrait uses a compressed local asset", async () => {

@@ -14,7 +14,7 @@ test("responsive story exports the Figma design dimensions", async () => {
   const story = await loadStoryModule();
 
   assert.equal(story.INVITATION_DESIGN_WIDTH, 393);
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6426);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6944);
 });
 
 test("responsive story scales only below the Figma design width", async () => {
@@ -37,7 +37,7 @@ test("responsive story ignores invalid and nonpositive viewport widths", async (
   assert.equal(story.calculateInvitationScale(Number.NaN), 1);
 });
 
-test("responsive wrapper contains the complete seven-screen narrative", async () => {
+test("responsive wrapper contains the complete updated narrative", async () => {
   const source = await readSource("../components/invitation/InvitationStory.tsx");
   const wrapperStart = source.indexOf("<ResponsiveStoryCanvas>");
   const wrapperEnd = source.indexOf("</ResponsiveStoryCanvas>");
@@ -47,6 +47,7 @@ test("responsive wrapper contains the complete seven-screen narrative", async ()
     "<CouplePhotoSection",
     "<DateEventSection",
     "<RsvpSection",
+    "<TransactionSection",
     "<GallerySection",
     "<ThankYouSection",
   ];

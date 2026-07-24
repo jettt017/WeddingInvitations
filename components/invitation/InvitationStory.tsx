@@ -1,7 +1,5 @@
 "use client";
 
-import { useReducer } from "react";
-
 import CouplePhotoSection from "@/components/invitation/CouplePhotoSection";
 import DateEventSection from "@/components/invitation/DateEventSection";
 import GallerySection from "@/components/invitation/GallerySection";
@@ -10,6 +8,7 @@ import { MusicProvider } from "@/components/invitation/MusicButton";
 import ResponsiveStoryCanvas from "@/components/invitation/ResponsiveStoryCanvas";
 import RsvpSection from "@/components/invitation/RsvpSection";
 import ThankYouSection from "@/components/invitation/ThankYouSection";
+import TransactionSection from "@/components/invitation/TransactionSection";
 import MainScreen from "@/components/main-screen/MainScreen";
 import { type StoryInteractionState, type StoryInteractionEvent } from "@/lib/invitation-story";
 
@@ -34,6 +33,7 @@ export default function InvitationStory({ interaction, dispatch }: InvitationSto
             onClose={() => {}}
             rsvpState={interaction.rsvp}
           />
+          <TransactionSection />
           <GallerySection
             mode={interaction.gallery}
             onOpen={() => dispatch({ type: "open_gallery" })}

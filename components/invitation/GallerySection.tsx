@@ -10,16 +10,16 @@ import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -97,6 +97,7 @@ function Polaroid({
   delay: number;
 }) {
   const fallback = photo.fallbacks[0];
+  const crop = fallback.crop;
 
   return (
     <motion.div
@@ -104,15 +105,27 @@ function Polaroid({
       style={{ left, top, rotate }}
       {...anim(delay, 25)}
     >
-      <div className="relative h-full w-full overflow-hidden">
-        <Image
-          src={fallback.src}
-          alt={photo.alt}
-          fill
-          sizes="181px"
-          className="object-cover"
-          style={{ objectPosition: fallback.objectPosition }}
-        />
+      <div className="relative h-full w-full overflow-hidden bg-black">
+        <div
+          className="absolute"
+          style={{
+            left: crop.left,
+            top: crop.top,
+            width: crop.width,
+            height: crop.height,
+          }}
+        >
+          <Image
+            src={fallback.src}
+            alt={photo.alt}
+            fill
+            sizes={crop.sizes}
+            style={{
+              objectFit: crop.objectFit,
+              objectPosition: crop.objectPosition,
+            }}
+          />
+        </div>
       </div>
     </motion.div>
   );

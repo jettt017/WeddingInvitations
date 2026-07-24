@@ -8,13 +8,11 @@ export const WEDDING_EVENT = {
 } as const;
 
 export const INVITATION_DESIGN_WIDTH = 393;
-export const INVITATION_STORY_HEIGHT = 6426;
+export const INVITATION_STORY_HEIGHT = 6_944;
 
 export function calculateInvitationScale(viewportWidth: number): number {
   if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 1;
-  return viewportWidth < INVITATION_DESIGN_WIDTH
-    ? viewportWidth / INVITATION_DESIGN_WIDTH
-    : 1;
+  return viewportWidth < INVITATION_DESIGN_WIDTH ? viewportWidth / INVITATION_DESIGN_WIDTH : 1;
 }
 
 const storyAsset = (path: string) => `/images/story/${path}`;
@@ -78,8 +76,19 @@ export const STORY_ASSETS = {
     butterfly: storyAsset("gallery/butterfly.webp"),
     headingFlourish: storyAsset("gallery/heading-flourish.webp"),
     cameraIcon: storyAsset("gallery/camera-icon.svg"),
+    feature01: storyAsset("gallery/gallery-feature-01.webp"),
+    feature02: storyAsset("gallery/gallery-feature-02.webp"),
+    feature03: storyAsset("gallery/gallery-feature-03.webp"),
     collage: storyAsset("gallery/collage.webp"),
     backIcon: storyAsset("gallery/back-icon.svg"),
+  },
+  transaction: {
+    topLeaves: storyAsset("transaction/top-leaves.webp"),
+    paperTear: storyAsset("transaction/paper-tear.webp"),
+    bottomFoliage: storyAsset("transaction/bottom-foliage.webp"),
+    mandiriLogo: storyAsset("transaction/logo-mandiri.webp"),
+    briLogo: storyAsset("transaction/logo-bri.webp"),
+    bcaLogo: storyAsset("transaction/logo-bca.webp"),
   },
   thankYou: {
     backgroundBlur: storyAsset("thank-you/background-blur.webp"),
@@ -109,31 +118,55 @@ export const STORY_PHOTOS = {
   },
   galleryFeature01: {
     replacementFile: "gallery-feature-01.webp",
-    alt: "Faiz posing outdoors beneath the trees",
+    alt: "Kinan and Faiz sitting together beneath the trees",
     fallbacks: [
       {
-        src: STORY_ASSETS.groomBride.groomPhoto,
-        objectPosition: "50% 63%",
+        src: STORY_ASSETS.gallery.feature01,
+        crop: {
+          left: "0%",
+          top: "0%",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "50% 42%",
+          sizes: "181px",
+        },
       },
     ],
   },
   galleryFeature02: {
     replacementFile: "gallery-feature-02.webp",
-    alt: "Kinan posing outdoors in a sunlit garden",
+    alt: "Kinan and Faiz posing together by a red lattice wall",
     fallbacks: [
       {
-        src: STORY_ASSETS.groomBride.bridePhoto,
-        objectPosition: "50% 52%",
+        src: STORY_ASSETS.gallery.feature02,
+        crop: {
+          left: "0%",
+          top: "-8.57%",
+          width: "100%",
+          height: "108.57%",
+          objectFit: "cover",
+          objectPosition: "50% 100%",
+          sizes: "181px",
+        },
       },
     ],
   },
   galleryFeature03: {
     replacementFile: "gallery-feature-03.webp",
-    alt: "Collage of wedding preparation portraits and details",
+    alt: "Kinan and Faiz smiling together beneath the trees",
     fallbacks: [
       {
-        src: STORY_ASSETS.gallery.collage,
-        objectPosition: "50% 50%",
+        src: STORY_ASSETS.gallery.feature03,
+        crop: {
+          left: "-12.49%",
+          top: "-84.07%",
+          width: "164.42%",
+          height: "256.08%",
+          objectFit: "fill",
+          objectPosition: "50% 50%",
+          sizes: "299px",
+        },
       },
     ],
   },

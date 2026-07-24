@@ -6,7 +6,7 @@ async function readSource(path: string): Promise<string> {
   return readFile(new URL(path, import.meta.url), "utf8").catch(() => "");
 }
 
-test("invitation story renders the seven designs in narrative order", async () => {
+test("invitation story renders the updated designs in narrative order", async () => {
   const source = await readSource("../components/invitation/InvitationStory.tsx");
   const components = [
     "<MainScreen",
@@ -14,6 +14,7 @@ test("invitation story renders the seven designs in narrative order", async () =
     "<CouplePhotoSection",
     "<DateEventSection",
     "<RsvpSection",
+    "<TransactionSection",
     "<GallerySection",
     "<ThankYouSection",
   ];
@@ -32,6 +33,7 @@ test("implemented sections retain their source Figma frame identifiers", async (
     "CouplePhotoSection.tsx",
     "DateEventSection.tsx",
     "RsvpSection.tsx",
+    "TransactionSection.tsx",
     "GallerySection.tsx",
     "ThankYouSection.tsx",
   ];
@@ -45,6 +47,7 @@ test("implemented sections retain their source Figma frame identifiers", async (
     "106:2",
     "115:151",
     "116:190",
+    "244:41",
     "115:135",
     "149:398",
     "128:88",
@@ -123,6 +126,7 @@ test("production component sources do not reference temporary Figma asset URLs",
     "CouplePhotoSection.tsx",
     "DateEventSection.tsx",
     "RsvpSection.tsx",
+    "TransactionSection.tsx",
     "GallerySection.tsx",
     "ThankYouSection.tsx",
     "MusicButton.tsx",
@@ -147,19 +151,36 @@ test("couple cover and gallery preview render configured photos without placehol
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature01/);
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature02/);
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature03/);
+  assert.match(gallerySource, /src=\{fallback\.src\}/);
+  assert.match(gallerySource, /const crop = fallback\.crop/);
   assert.match(gallerySource, /alt=\{photo\.alt\}/);
   assert.doesNotMatch(source, /photo placeholder/i);
-  assert.doesNotMatch(gallerySource, /bg-black/);
   assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
+});
+
+test("transaction section renders the three Figma account details after RSVP", async () => {
+  const storySource = await readSource("../components/invitation/InvitationStory.tsx");
+  const transactionSource = await readSource("../components/invitation/TransactionSection.tsx");
+
+  assert.ok(
+    storySource.indexOf("<RsvpSection") < storySource.indexOf("<TransactionSection") &&
+      storySource.indexOf("<TransactionSection") < storySource.indexOf("<GallerySection")
+  );
+  assert.match(transactionSource, /figmaNode="244:41"/);
+  assert.match(transactionSource, /SUPPORT THE STORY/);
+  assert.match(transactionSource, /Be Part of This Journey/);
+  assert.match(transactionSource, /***REMOVED***/);
+  assert.match(transactionSource, /***REMOVED***/);
+  assert.match(transactionSource, /FAIZ ARDYSYAHPUTRA/);
+  assert.match(transactionSource, /PRAMESTHI WAHYURING KINASIH/);
+  assert.match(transactionSource, /STORY_ASSETS\.transaction/);
+  assert.doesNotMatch(transactionSource, /figma\.com\/api\/mcp\/asset/);
 });
 
 test("groom portrait crop keeps the face centered inside the arch", async () => {
   const source = await readSource("../components/invitation/GroomBrideSection.tsx");
 
-  assert.match(
-    source,
-    /\? \{ left: -192, top: -190, width: 490, height: 734 \}/
-  );
+  assert.match(source, /\? \{ left: -192, top: -190, width: 490, height: 734 \}/);
 });
 
 test("document metadata matches Kinan and Faiz on 16 August 2026", async () => {
