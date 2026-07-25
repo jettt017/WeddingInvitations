@@ -197,7 +197,11 @@ test("couple cover and gallery preview render configured photos without placehol
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature02/);
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature03/);
   assert.match(gallerySource, /src=\{fallback\.src\}/);
-  assert.match(gallerySource, /const crop = fallback\.crop/);
+  assert.match(gallerySource, /aria-hidden="true"/);
+  assert.match(gallerySource, /object-cover/);
+  assert.match(gallerySource, /blur-\[10px\]/);
+  assert.match(gallerySource, /alt=\{photo\.alt\}[\s\S]*object-contain/);
+  assert.doesNotMatch(gallerySource, /const crop = fallback\.crop/);
   assert.match(gallerySource, /alt=\{photo\.alt\}/);
   assert.doesNotMatch(source, /photo placeholder/i);
   assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
@@ -293,11 +297,12 @@ test("gallery matches the Figma photo windows without stretching images", async 
   assert.match(gallerySource, /left=\{67\}[\s\S]*top=\{318\}/);
   assert.match(gallerySource, /left=\{126\}[\s\S]*top=\{467\}/);
   assert.match(gallerySource, /top-\[170px\][\s\S]*h-\[617px\][\s\S]*w-\[347px\]/);
-  assert.match(storySource, /gallery-feature-01-[a-f0-9]{8}\.webp/);
-  assert.match(storySource, /gallery-feature-02-[a-f0-9]{8}\.webp/);
-  assert.match(storySource, /gallery-feature-03-[a-f0-9]{8}\.webp/);
-  assert.match(storySource, /collage-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /gallery-feature-01-7a15de79\.webp/);
+  assert.match(storySource, /gallery-feature-02-2933126a\.webp/);
+  assert.match(storySource, /gallery-feature-03-76885071\.webp/);
+  assert.match(storySource, /collage-85e96837\.webp/);
   assert.match(storySource, /groom-photo-[a-f0-9]{8}\.webp/);
+  assert.doesNotMatch(storySource, /112bcc1c|c8b6323b|9026800e|136efe96/);
   assert.doesNotMatch(storySource, /objectFit:\s*"fill"/);
 });
 

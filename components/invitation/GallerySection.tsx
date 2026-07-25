@@ -97,7 +97,6 @@ function Polaroid({
   delay: number;
 }) {
   const fallback = photo.fallbacks[0];
-  const crop = fallback.crop;
 
   return (
     <motion.div
@@ -105,27 +104,24 @@ function Polaroid({
       style={{ left, top, rotate }}
       {...anim(delay, 25)}
     >
-      <div className="absolute top-[9.37px] left-[8.04px] h-[174.698px] w-[182.537px] overflow-hidden bg-black">
-        <div
-          className="absolute"
-          style={{
-            left: crop.left,
-            top: crop.top,
-            width: crop.width,
-            height: crop.height,
-          }}
-        >
-          <Image
-            src={fallback.src}
-            alt={photo.alt}
-            fill
-            sizes={crop.sizes}
-            style={{
-              objectFit: crop.objectFit,
-              objectPosition: crop.objectPosition,
-            }}
-          />
-        </div>
+      <div className="absolute top-[9.37px] left-[8.04px] h-[174.698px] w-[182.537px] overflow-hidden bg-[#302A28]">
+        <Image
+          src={fallback.src}
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes={fallback.sizes}
+          className="scale-110 object-cover opacity-55 blur-[10px]"
+          style={{ objectPosition: fallback.objectPosition }}
+        />
+        <Image
+          src={fallback.src}
+          alt={photo.alt}
+          fill
+          sizes={fallback.sizes}
+          className="object-contain"
+          style={{ objectPosition: fallback.objectPosition }}
+        />
       </div>
     </motion.div>
   );

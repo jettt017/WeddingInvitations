@@ -274,34 +274,29 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,
-    /gallery\/gallery-feature-01-[a-f0-9]{8}\.webp$/
+    /gallery\/gallery-feature-01-7a15de79\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature02.fallbacks[0].src,
-    /gallery\/gallery-feature-02-[a-f0-9]{8}\.webp$/
+    /gallery\/gallery-feature-02-2933126a\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src,
-    /gallery\/gallery-feature-03-[a-f0-9]{8}\.webp$/
+    /gallery\/gallery-feature-03-76885071\.webp$/
   );
-  assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.objectPosition, "50% 100%");
-  assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.top, "0%");
   assert.ok(
     [
       story.STORY_PHOTOS.galleryFeature01,
       story.STORY_PHOTOS.galleryFeature02,
       story.STORY_PHOTOS.galleryFeature03,
-    ].every((photo) => photo.fallbacks[0].crop.objectFit === "cover")
+    ].every(
+      (photo) =>
+        photo.fallbacks[0].objectPosition === "50% 50%" &&
+        photo.fallbacks[0].sizes === "183px" &&
+        !("crop" in photo.fallbacks[0])
+    )
   );
-  assert.deepEqual(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].crop, {
-    left: "-12.49%",
-    top: "-84.07%",
-    width: "164.42%",
-    height: "256.08%",
-    objectFit: "cover",
-    objectPosition: "50% 50%",
-    sizes: "299px",
-  });
+  assert.match(story.STORY_ASSETS.gallery.collage, /gallery\/collage-85e96837\.webp$/);
 });
 
 test("updated story height includes the 518 pixel transaction section", async () => {

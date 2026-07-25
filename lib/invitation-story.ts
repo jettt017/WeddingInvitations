@@ -88,10 +88,10 @@ export const STORY_ASSETS = {
     butterfly: storyAsset("gallery/butterfly.webp"),
     headingFlourish: storyAsset("gallery/heading-flourish.webp"),
     cameraIcon: storyAsset("gallery/camera-icon.svg"),
-    feature01: storyAsset("gallery/gallery-feature-01-112bcc1c.webp"),
-    feature02: storyAsset("gallery/gallery-feature-02-c8b6323b.webp"),
-    feature03: storyAsset("gallery/gallery-feature-03-9026800e.webp"),
-    collage: storyAsset("gallery/collage-136efe96.webp"),
+    feature01: storyAsset("gallery/gallery-feature-01-7a15de79.webp"),
+    feature02: storyAsset("gallery/gallery-feature-02-2933126a.webp"),
+    feature03: storyAsset("gallery/gallery-feature-03-76885071.webp"),
+    collage: storyAsset("gallery/collage-85e96837.webp"),
     backIcon: storyAsset("gallery/back-icon.svg"),
   },
   transaction: {
@@ -134,15 +134,8 @@ export const STORY_PHOTOS = {
     fallbacks: [
       {
         src: STORY_ASSETS.gallery.feature01,
-        crop: {
-          left: "0%",
-          top: "0%",
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "50% 42%",
-          sizes: "181px",
-        },
+        objectPosition: "50% 50%",
+        sizes: "183px",
       },
     ],
   },
@@ -152,15 +145,8 @@ export const STORY_PHOTOS = {
     fallbacks: [
       {
         src: STORY_ASSETS.gallery.feature02,
-        crop: {
-          left: "0%",
-          top: "0%",
-          width: "100%",
-          height: "108.57%",
-          objectFit: "cover",
-          objectPosition: "50% 100%",
-          sizes: "181px",
-        },
+        objectPosition: "50% 50%",
+        sizes: "183px",
       },
     ],
   },
@@ -170,15 +156,8 @@ export const STORY_PHOTOS = {
     fallbacks: [
       {
         src: STORY_ASSETS.gallery.feature03,
-        crop: {
-          left: "-12.49%",
-          top: "-84.07%",
-          width: "164.42%",
-          height: "256.08%",
-          objectFit: "cover",
-          objectPosition: "50% 50%",
-          sizes: "299px",
-        },
+        objectPosition: "50% 50%",
+        sizes: "183px",
       },
     ],
   },
