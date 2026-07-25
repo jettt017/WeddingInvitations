@@ -35,7 +35,7 @@ function Portrait({
   const left = isGroom ? 215 : 17;
   const top = isGroom ? 56 : 497;
   const photoBox = isGroom
-    ? { left: -192, top: -190, width: 490, height: 734 }
+    ? { left: -117, top: -94, width: 349, height: 523 }
     : { left: -99, top: -93, width: 343, height: 513 };
 
   return (
@@ -51,7 +51,7 @@ function Portrait({
             src={photo}
             alt={isGroom ? "Faiz Ardisyahputra" : "Pramesthi Wahyuring Kinasih"}
             fill
-            sizes={isGroom ? "490px" : "343px"}
+            sizes={isGroom ? "349px" : "343px"}
             className="object-cover"
           />
         </div>

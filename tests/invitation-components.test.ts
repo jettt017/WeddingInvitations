@@ -257,7 +257,8 @@ test("RSVP overlay behaves as a modal and hides the invitation story", async () 
 test("groom portrait crop keeps the face centered inside the arch", async () => {
   const source = await readSource("../components/invitation/GroomBrideSection.tsx");
 
-  assert.match(source, /\? \{ left: -192, top: -190, width: 490, height: 734 \}/);
+  assert.match(source, /\? \{ left: -117, top: -94, width: 349, height: 523 \}/);
+  assert.match(source, /sizes=\{isGroom \? "349px" : "343px"\}/);
 });
 
 test("document metadata matches Kinan and Faiz on 16 August 2026", async () => {
@@ -291,6 +292,11 @@ test("gallery matches the Figma photo windows without stretching images", async 
   assert.match(gallerySource, /left=\{67\}[\s\S]*top=\{318\}/);
   assert.match(gallerySource, /left=\{126\}[\s\S]*top=\{467\}/);
   assert.match(gallerySource, /top-\[170px\][\s\S]*h-\[617px\][\s\S]*w-\[347px\]/);
+  assert.match(storySource, /gallery-feature-01-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /gallery-feature-02-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /gallery-feature-03-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /collage-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /groom-photo-[a-f0-9]{8}\.webp/);
   assert.doesNotMatch(storySource, /objectFit:\s*"fill"/);
 });
 

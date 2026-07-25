@@ -34,7 +34,7 @@ export const STORY_ASSETS = {
   paperTexture: "/images/main-screen/paper-texture.webp",
   groomBride: {
     leavesFrame: storyAsset("groom-bride/leaves-frame.webp"),
-    groomPhoto: storyAsset("groom-bride/groom-photo.webp"),
+    groomPhoto: storyAsset("groom-bride/groom-photo-bedf8ff4.webp"),
     archMask: storyAsset("groom-bride/arch-mask.svg"),
     groomVines: storyAsset("groom-bride/groom-vines.webp"),
     groomBranch: storyAsset("groom-bride/groom-branch.webp"),
@@ -88,10 +88,10 @@ export const STORY_ASSETS = {
     butterfly: storyAsset("gallery/butterfly.webp"),
     headingFlourish: storyAsset("gallery/heading-flourish.webp"),
     cameraIcon: storyAsset("gallery/camera-icon.svg"),
-    feature01: storyAsset("gallery/gallery-feature-01.webp"),
-    feature02: storyAsset("gallery/gallery-feature-02.webp"),
-    feature03: storyAsset("gallery/gallery-feature-03.webp"),
-    collage: storyAsset("gallery/collage.webp"),
+    feature01: storyAsset("gallery/gallery-feature-01-112bcc1c.webp"),
+    feature02: storyAsset("gallery/gallery-feature-02-c8b6323b.webp"),
+    feature03: storyAsset("gallery/gallery-feature-03-9026800e.webp"),
+    collage: storyAsset("gallery/collage-136efe96.webp"),
     backIcon: storyAsset("gallery/back-icon.svg"),
   },
   transaction: {

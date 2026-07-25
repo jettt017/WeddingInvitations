@@ -231,7 +231,7 @@ test("story assets are committed local files rather than temporary Figma URLs", 
   assert.ok(paths.length >= 50);
   assert.ok(paths.every((path) => path.startsWith("/images/")));
   assert.ok(paths.every((path) => !path.includes("figma.com")));
-  assert.ok(paths.some((path) => path.endsWith("gallery/collage.webp")));
+  assert.ok(paths.some((path) => /gallery\/collage-[a-f0-9]{8}\.webp$/.test(path)));
   assert.ok(paths.some((path) => path.endsWith("transaction/logo-mandiri.webp")));
   assert.ok(paths.some((path) => path.endsWith("transaction/bottom-foliage.webp")));
   assert.ok(paths.some((path) => path.endsWith("thank-you/rings.webp")));
@@ -274,15 +274,15 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,
-    /gallery\/gallery-feature-01\.webp$/
+    /gallery\/gallery-feature-01-[a-f0-9]{8}\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature02.fallbacks[0].src,
-    /gallery\/gallery-feature-02\.webp$/
+    /gallery\/gallery-feature-02-[a-f0-9]{8}\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src,
-    /gallery\/gallery-feature-03\.webp$/
+    /gallery\/gallery-feature-03-[a-f0-9]{8}\.webp$/
   );
   assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.objectPosition, "50% 100%");
   assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.top, "0%");
@@ -344,7 +344,7 @@ test("groom portrait uses a compressed local asset", async () => {
   const story = await loadStoryModule();
   const groomPhoto = story.STORY_ASSETS.groomBride.groomPhoto;
 
-  assert.match(groomPhoto, /groom-photo\.webp$/);
+  assert.match(groomPhoto, /groom-photo-[a-f0-9]{8}\.webp$/);
 
   const groomPhotoPath = path.join(process.cwd(), "public", groomPhoto.replace(/^\//, ""));
   const groomPhotoStats = await stat(groomPhotoPath);
