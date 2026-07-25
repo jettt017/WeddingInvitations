@@ -29,6 +29,23 @@ test("g is URL decoded", async () => {
   assert.equal(invitation.resolveGuestName?.("?g=Rina+%26+Fajar"), "Rina & Fajar");
 });
 
+test("friendly to links turn separators into a readable guest name", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.resolveGuestName, "function");
+  assert.equal(invitation.resolveGuestName?.("?to=Rina-dan-Fajar"), "Rina & Fajar");
+  assert.equal(invitation.resolveGuestName?.("?to=Bapak-Supardi"), "Bapak Supardi");
+});
+
+test("guest identity distinguishes personalized links from the generic invitation", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.isPersonalizedGuestName, "function");
+  assert.equal(invitation.isPersonalizedGuestName?.("Rina & Fajar"), true);
+  assert.equal(invitation.isPersonalizedGuestName?.(" object "), false);
+  assert.equal(invitation.isPersonalizedGuestName?.(""), false);
+});
+
 test("returns object when supported values are absent or blank", async () => {
   const invitation = await loadInvitationModule();
 

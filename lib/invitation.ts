@@ -9,6 +9,10 @@ export const MAIN_SCREEN_ASSETS = {
   topFloralOverlay: "/images/main-screen/top-floral-overlay.png",
 } as const;
 
+function formatGuestName(value: string): string {
+  return value.trim().replace(/-dan-/gi, " & ").replace(/-/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export function resolveGuestName(search: string): string {
   const params = new URLSearchParams(search);
 
@@ -16,11 +20,16 @@ export function resolveGuestName(search: string): string {
     const value = params.get(key)?.trim();
 
     if (value) {
-      return value;
+      return formatGuestName(value);
     }
   }
 
   return "object";
+}
+
+export function isPersonalizedGuestName(value: string): boolean {
+  const normalized = value.trim().toLocaleLowerCase("id-ID");
+  return Boolean(normalized && normalized !== "object");
 }
 
 export type InvitationView = "splash" | "main";

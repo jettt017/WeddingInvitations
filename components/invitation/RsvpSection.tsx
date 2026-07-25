@@ -16,8 +16,10 @@ import DecorativeImage from "@/components/invitation/DecorativeImage";
 import MusicButton from "@/components/invitation/MusicButton";
 import RsvpCelebration from "@/components/invitation/RsvpCelebration";
 import StorySection from "@/components/invitation/StorySection";
+import { isPersonalizedGuestName } from "@/lib/invitation";
 import { type RsvpFormValue, STORY_ASSETS, validateRsvp } from "@/lib/invitation-story";
 import { RSVP_SUCCESS_DURATION_MS } from "@/lib/rsvp-celebration";
+import { findRsvpByGuestName, normalizeRsvpGuestName } from "@/lib/rsvp-guest";
 import {
   acquireRsvpSubmissionLease,
   releaseRsvpSubmissionLease,
@@ -341,34 +343,39 @@ function createRsvpSubmissionOwner(): string {
 
 export function RsvpForm({
   mode,
+  guestName = "object",
   onSubmitted,
   onClose,
   onAlreadyCompleted,
 }: {
   mode: "form" | "success";
+  guestName?: string;
   onSubmitted: () => void;
   onClose: () => void;
   onAlreadyCompleted?: () => boolean;
 }) {
   const assets = STORY_ASSETS.rsvpForm;
   const isConfigured = supabase !== null;
+  const isPersonalizedGuest = isPersonalizedGuestName(guestName);
   const formId = useId();
   const attendanceErrorId = `${formId}-attendance-error`;
   const nameErrorId = `${formId}-name-error`;
   const guestsErrorId = `${formId}-guests-error`;
   const attendanceRef = useRef<HTMLSelectElement>(null);
+  const confirmationRef = useRef<HTMLHeadingElement>(null);
   const loadingStatusRef = useRef<HTMLDivElement>(null);
   const submissionInFlightRef = useRef(false);
   const isMountedRef = useRef(true);
   const [value, setValue] = useState<RsvpFormValue>({
     attendance: "",
-    name: "",
+    name: isPersonalizedGuest ? guestName : "",
     guests: 1,
     wishes: "",
   });
   const [errors, setErrors] = useState<ReturnType<typeof validateRsvp>>({});
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const handleClose = useCallback(() => {
     if (isSubmitting || submissionInFlightRef.current) return;
@@ -387,6 +394,10 @@ export function RsvpForm({
   }, [isSubmitting]);
 
   useEffect(() => {
+    if (isReviewing) confirmationRef.current?.focus();
+  }, [isReviewing]);
+
+  useEffect(() => {
     if (mode === "form") attendanceRef.current?.focus();
     if (mode === "success") {
       const timer = setTimeout(() => {
@@ -396,20 +407,31 @@ export function RsvpForm({
     }
   }, [handleClose, mode]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (submissionInFlightRef.current) return;
     if (onAlreadyCompleted?.()) return;
 
-    const nextErrors = validateRsvp(value);
+    const nextErrors = validateRsvp({
+      ...value,
+      name: isPersonalizedGuest ? guestName : value.name,
+    });
     setErrors(nextErrors);
     setSubmitError("");
 
-    const client = supabase;
     if (Object.keys(nextErrors).length > 0 || !isConfigured) return;
+    setIsReviewing(true);
+  }
+
+  async function handleConfirmedSubmit() {
+    if (submissionInFlightRef.current) return;
+    if (onAlreadyCompleted?.()) return;
+
+    const client = supabase;
     if (!client) return;
     const configuredClient = client;
+    const guestIdentity = normalizeRsvpGuestName(isPersonalizedGuest ? guestName : value.name);
 
     submissionInFlightRef.current = true;
     setIsSubmitting(true);
@@ -417,8 +439,15 @@ export function RsvpForm({
     async function insertOnce(): Promise<RsvpSubmissionOutcome> {
       if (onAlreadyCompleted?.()) return "already-completed";
 
+      const lookup = await findRsvpByGuestName(configuredClient, guestIdentity);
+      if (lookup === "found") {
+        onSubmitted();
+        return "already-completed";
+      }
+      if (lookup === "failed") return "failed";
+
       const { error } = await configuredClient.from("rsvps").insert({
-        name: value.name.trim(),
+        name: guestIdentity,
         attending: value.attendance === "attending",
         guests: value.guests,
         wishes: value.wishes?.trim() || null,
@@ -478,10 +507,17 @@ export function RsvpForm({
     }
 
     if (outcome === "failed") {
-      setSubmitError("Your response could not be sent. Please try again.");
+      setIsReviewing(false);
+      setSubmitError(
+        "We could not verify or save your RSVP. Please check your connection and try again."
+      );
       return;
     }
+  }
 
+  function handleBackToEdit() {
+    setIsReviewing(false);
+    window.requestAnimationFrame(() => attendanceRef.current?.focus());
   }
 
   return (
@@ -578,118 +614,195 @@ export function RsvpForm({
                 />
               </motion.div>
 
-              <form onSubmit={handleSubmit} className="absolute top-[236px] left-[25px] w-[343px]">
-                <motion.label
+              {isReviewing ? (
+                <motion.section
                   variants={itemVariants}
-                  className="font-playfair block text-[15px] text-[#453F2F]"
+                  role="alertdialog"
+                  aria-labelledby={`${formId}-confirmation-title`}
+                  aria-describedby={`${formId}-confirmation-warning`}
+                  className="absolute top-[222px] left-[25px] w-[343px] rounded-[26px] border border-[#7C5649]/15 bg-[#E9DCCB]/95 px-6 py-7 text-[#453F2F] shadow-[0_18px_45px_-24px_rgba(69,63,47,0.65)] backdrop-blur-[2px]"
                 >
-                  Your Response:
-                  <select
-                    ref={attendanceRef}
-                    value={value.attendance}
-                    onChange={(event) =>
-                      setValue((current) => ({
-                        ...current,
-                        attendance: event.target.value as RsvpFormValue["attendance"],
-                      }))
-                    }
-                    aria-invalid={Boolean(errors.attendance)}
-                    aria-describedby={errors.attendance ? attendanceErrorId : undefined}
-                    className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                  <h3
+                    ref={confirmationRef}
+                    id={`${formId}-confirmation-title`}
+                    tabIndex={-1}
+                    className="font-playfair text-center text-[25px] leading-8 outline-none"
                   >
-                    <option value="">Select response</option>
-                    <option value="attending">Joyfully attending</option>
-                    <option value="not_attending">Unable to attend</option>
-                  </select>
-                </motion.label>
-                {errors.attendance ? (
-                  <p id={attendanceErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                    {errors.attendance}
+                    Confirm Your RSVP
+                  </h3>
+                  <p
+                    id={`${formId}-confirmation-warning`}
+                    className="font-literata mt-3 text-center text-[11px] leading-[17px] text-[#7C2D24]"
+                  >
+                    Please make sure your RSVP details are correct. Your response cannot be changed
+                    after it is sent.
                   </p>
-                ) : null}
 
-                <motion.label
-                  variants={itemVariants}
-                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-                >
-                  Name of guest:
-                  <input
-                    value={value.name}
-                    onChange={(event) =>
-                      setValue((current) => ({ ...current, name: event.target.value }))
-                    }
-                    aria-invalid={Boolean(errors.name)}
-                    aria-describedby={errors.name ? nameErrorId : undefined}
-                    className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                  />
-                </motion.label>
-                {errors.name ? (
-                  <p id={nameErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                    {errors.name}
-                  </p>
-                ) : null}
+                  <dl className="font-playfair mt-5 space-y-3 rounded-[18px] bg-[#FAEBE0]/80 px-5 py-4 text-[13px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-[#62483E]/75">Attendance</dt>
+                      <dd className="text-right font-semibold">
+                        {value.attendance === "attending"
+                          ? "Joyfully attending"
+                          : "Unable to attend"}
+                      </dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-[#62483E]/75">Guest</dt>
+                      <dd className="max-w-[190px] text-right font-semibold">
+                        {normalizeRsvpGuestName(isPersonalizedGuest ? guestName : value.name)}
+                      </dd>
+                    </div>
+                    <div className="flex items-start justify-between gap-4">
+                      <dt className="text-[#62483E]/75">Guests</dt>
+                      <dd className="text-right font-semibold">{value.guests}</dd>
+                    </div>
+                    {value.wishes?.trim() ? (
+                      <div className="border-t border-[#7C5649]/15 pt-3">
+                        <dt className="text-[#62483E]/75">Wishes &amp; Prayers</dt>
+                        <dd className="font-literata mt-1 max-h-[74px] overflow-y-auto text-[11px] leading-[16px] whitespace-pre-wrap italic">
+                          {value.wishes.trim()}
+                        </dd>
+                      </div>
+                    ) : null}
+                  </dl>
 
-                <motion.label
-                  variants={itemVariants}
-                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={handleBackToEdit}
+                      className="font-playfair h-[46px] rounded-full border border-[#7C5649] text-[11px] font-bold tracking-[0.04em] text-[#7C5649] focus-visible:ring-2 focus-visible:ring-[#7C5649] focus-visible:outline-none"
+                    >
+                      BACK TO EDIT
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={handleConfirmedSubmit}
+                      className="font-playfair h-[46px] rounded-full bg-[#7C5649] px-3 text-[11px] font-bold tracking-[0.04em] text-white shadow-md focus-visible:ring-2 focus-visible:ring-[#7C5649] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      YES, SEND RSVP
+                    </button>
+                  </div>
+                </motion.section>
+              ) : (
+                <form
+                  onSubmit={handleSubmit}
+                  className="absolute top-[236px] left-[25px] w-[343px]"
                 >
-                  Number of guests:
-                  <input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={value.guests}
-                    onChange={(event) =>
-                      setValue((current) => ({ ...current, guests: Number(event.target.value) }))
-                    }
-                    aria-invalid={Boolean(errors.guests)}
-                    aria-describedby={errors.guests ? guestsErrorId : undefined}
-                    className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                  />
-                </motion.label>
-                {errors.guests ? (
-                  <p id={guestsErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                    {errors.guests}
-                  </p>
-                ) : null}
+                  <motion.label
+                    variants={itemVariants}
+                    className="font-playfair block text-[15px] text-[#453F2F]"
+                  >
+                    Your Response:
+                    <select
+                      ref={attendanceRef}
+                      value={value.attendance}
+                      onChange={(event) =>
+                        setValue((current) => ({
+                          ...current,
+                          attendance: event.target.value as RsvpFormValue["attendance"],
+                        }))
+                      }
+                      aria-invalid={Boolean(errors.attendance)}
+                      aria-describedby={errors.attendance ? attendanceErrorId : undefined}
+                      className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                    >
+                      <option value="">Select response</option>
+                      <option value="attending">Joyfully attending</option>
+                      <option value="not_attending">Unable to attend</option>
+                    </select>
+                  </motion.label>
+                  {errors.attendance ? (
+                    <p id={attendanceErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                      {errors.attendance}
+                    </p>
+                  ) : null}
 
-                <motion.label
-                  variants={itemVariants}
-                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-                >
-                  Wishes & Prayers:
-                  <textarea
-                    rows={2}
-                    value={value.wishes}
-                    onChange={(event) =>
-                      setValue((current) => ({ ...current, wishes: event.target.value }))
-                    }
-                    className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                    placeholder="Leave a message for Kinan & Faiz..."
-                  />
-                </motion.label>
+                  <motion.label
+                    variants={itemVariants}
+                    className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                  >
+                    Name of guest:
+                    <input
+                      value={isPersonalizedGuest ? guestName : value.name}
+                      readOnly={isPersonalizedGuest}
+                      onChange={(event) =>
+                        setValue((current) => ({ ...current, name: event.target.value }))
+                      }
+                      aria-invalid={Boolean(errors.name)}
+                      aria-describedby={errors.name ? nameErrorId : undefined}
+                      className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                    />
+                  </motion.label>
+                  {errors.name ? (
+                    <p id={nameErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                      {errors.name}
+                    </p>
+                  ) : null}
 
-                <motion.button
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.015 }}
-                  whileTap={{ scale: 0.985 }}
-                  type="submit"
-                  disabled={!isConfigured || isSubmitting}
-                  className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isSubmitting ? "SENDING..." : "CONFIRM"}
-                </motion.button>
-                {!isConfigured ? (
-                  <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
-                    RSVP will be available soon.
-                  </p>
-                ) : null}
-                {submitError ? (
-                  <p role="alert" className="mt-3 text-center text-xs text-[#7C2D24]">
-                    {submitError}
-                  </p>
-                ) : null}
-              </form>
+                  <motion.label
+                    variants={itemVariants}
+                    className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                  >
+                    Number of guests:
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={value.guests}
+                      onChange={(event) =>
+                        setValue((current) => ({ ...current, guests: Number(event.target.value) }))
+                      }
+                      aria-invalid={Boolean(errors.guests)}
+                      aria-describedby={errors.guests ? guestsErrorId : undefined}
+                      className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                    />
+                  </motion.label>
+                  {errors.guests ? (
+                    <p id={guestsErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                      {errors.guests}
+                    </p>
+                  ) : null}
+
+                  <motion.label
+                    variants={itemVariants}
+                    className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                  >
+                    Wishes & Prayers:
+                    <textarea
+                      rows={2}
+                      value={value.wishes}
+                      onChange={(event) =>
+                        setValue((current) => ({ ...current, wishes: event.target.value }))
+                      }
+                      className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                      placeholder="Leave a message for Kinan & Faiz..."
+                    />
+                  </motion.label>
+
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.015 }}
+                    whileTap={{ scale: 0.985 }}
+                    type="submit"
+                    disabled={!isConfigured || isSubmitting}
+                    className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isSubmitting ? "SENDING..." : "CONFIRM"}
+                  </motion.button>
+                  {!isConfigured ? (
+                    <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
+                      RSVP will be available soon.
+                    </p>
+                  ) : null}
+                  {submitError ? (
+                    <p role="alert" className="mt-3 text-center text-xs text-[#7C2D24]">
+                      {submitError}
+                    </p>
+                  ) : null}
+                </form>
+              )}
             </motion.div>
           )}
         </div>

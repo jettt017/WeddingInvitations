@@ -14,7 +14,7 @@ import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-
 import InvitationStory from "@/components/invitation/InvitationStory";
 import { RsvpForm } from "@/components/invitation/RsvpSection";
 import HeroBackground from "@/components/splash-screen/HeroBackground";
-import { invitationViewReducer } from "@/lib/invitation";
+import { invitationViewReducer, isPersonalizedGuestName, resolveGuestName } from "@/lib/invitation";
 import {
   INITIAL_STORY_INTERACTION,
   storyInteractionReducer,
@@ -26,6 +26,8 @@ import {
   persistInvitationAccessSafely,
   RSVP_ACCESS_STORAGE_KEY,
 } from "@/lib/rsvp-persistence";
+import { findRsvpByGuestName } from "@/lib/rsvp-guest";
+import { supabase } from "@/lib/supabase";
 
 const transitionEase = [0.16, 1, 0.3, 1] as const;
 const dialogFocusableSelector =
@@ -42,6 +44,19 @@ function getViewportWidth(): number {
 
 function getServerViewportWidth(): number {
   return INVITATION_DESIGN_WIDTH;
+}
+
+function subscribeToGuestName(onStoreChange: () => void): () => void {
+  window.addEventListener("popstate", onStoreChange);
+  return () => window.removeEventListener("popstate", onStoreChange);
+}
+
+function getGuestName(): string {
+  return resolveGuestName(window.location.search);
+}
+
+function getServerGuestName(): string {
+  return resolveGuestName("");
 }
 
 export default function InvitationExperience() {
@@ -64,12 +79,16 @@ export default function InvitationExperience() {
     getViewportWidth,
     getServerViewportWidth
   );
+  const guestName = useSyncExternalStore(subscribeToGuestName, getGuestName, getServerGuestName);
+  const isPersonalizedGuest = isPersonalizedGuestName(guestName);
   const scale = calculateInvitationScale(viewportWidth);
   const isRsvpOverlayOpen =
     view === "main" && (interaction.rsvp === "form" || interaction.rsvp === "success");
   const shouldHideStory = isRsvpOverlayOpen || isRsvpDialogExiting;
 
   const restorePersistedAccess = useCallback(() => {
+    if (isPersonalizedGuest) return "locked" as const;
+
     const transaction = loadInvitationAccessSafely(() => window.localStorage);
 
     if (transaction !== "locked") {
@@ -80,9 +99,11 @@ export default function InvitationExperience() {
     }
 
     return transaction;
-  }, []);
+  }, [isPersonalizedGuest]);
 
   useEffect(() => {
+    if (isPersonalizedGuest) return;
+
     restorePersistedAccess();
 
     function handleStorage(event: StorageEvent) {
@@ -99,7 +120,33 @@ export default function InvitationExperience() {
 
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [restorePersistedAccess]);
+  }, [isPersonalizedGuest, restorePersistedAccess]);
+
+  useEffect(() => {
+    if (!isPersonalizedGuest || !supabase) return;
+
+    let cancelled = false;
+    dispatchInteraction({ type: "reset_invitation_access" });
+
+    void findRsvpByGuestName(supabase, guestName).then((lookup) => {
+      if (cancelled || lookup !== "found") return;
+
+      if (rsvpDialogRef.current) {
+        isRsvpDialogClosingRef.current = true;
+        setIsRsvpDialogExiting(true);
+        shouldFocusTransactionRef.current = true;
+      }
+
+      dispatchInteraction({
+        type: "restore_invitation_access",
+        transaction: "ready",
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [guestName, isPersonalizedGuest]);
 
   const handleRsvpOpen = useCallback(() => {
     if (restorePersistedAccess() === "locked") {
@@ -123,7 +170,9 @@ export default function InvitationExperience() {
   const handleRsvpSubmitted = useCallback(() => {
     const transaction = interaction.transaction === "revealed" ? "revealed" : "ready";
 
-    persistInvitationAccessSafely(() => window.localStorage, transaction);
+    if (!isPersonalizedGuest) {
+      persistInvitationAccessSafely(() => window.localStorage, transaction);
+    }
 
     if (isRsvpDialogClosingRef.current) {
       dispatchInteraction({
@@ -134,7 +183,7 @@ export default function InvitationExperience() {
     }
 
     dispatchInteraction({ type: "rsvp_submitted" });
-  }, [interaction.transaction]);
+  }, [interaction.transaction, isPersonalizedGuest]);
 
   const handleRsvpClose = useCallback(() => {
     isRsvpDialogClosingRef.current = true;
@@ -150,9 +199,11 @@ export default function InvitationExperience() {
   }, [interaction.rsvp]);
 
   const handleTransactionReveal = useCallback(() => {
-    persistInvitationAccessSafely(() => window.localStorage, "revealed");
+    if (!isPersonalizedGuest) {
+      persistInvitationAccessSafely(() => window.localStorage, "revealed");
+    }
     dispatchInteraction({ type: "reveal_transaction" });
-  }, []);
+  }, [isPersonalizedGuest]);
 
   const handleRsvpDialogKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== "Tab") return;
@@ -322,6 +373,7 @@ export default function InvitationExperience() {
                 >
                   <RsvpForm
                     mode={interaction.rsvp === "success" ? "success" : "form"}
+                    guestName={guestName}
                     onSubmitted={handleRsvpSubmitted}
                     onClose={handleRsvpClose}
                     onAlreadyCompleted={handleRsvpCompletionCheck}

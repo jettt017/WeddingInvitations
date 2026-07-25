@@ -273,6 +273,7 @@ export type StoryInteractionEvent =
   | { type: "close_rsvp" }
   | { type: "rsvp_submitted" }
   | { type: "reveal_transaction" }
+  | { type: "reset_invitation_access" }
   | {
       type: "restore_invitation_access";
       transaction: Exclude<TransactionAccess, "locked">;
@@ -305,6 +306,12 @@ export function storyInteractionReducer(
     case "reveal_transaction":
       if (state.transaction !== "ready") return state;
       return { ...state, transaction: "revealed" };
+    case "reset_invitation_access":
+      return {
+        ...state,
+        rsvp: "intro",
+        transaction: "locked",
+      };
     case "restore_invitation_access":
       return {
         ...state,

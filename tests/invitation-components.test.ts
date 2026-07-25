@@ -118,6 +118,27 @@ test("RSVP transitions focus their mounted destination and announce form feedbac
   }
 });
 
+test("personalized invitations confirm and deduplicate RSVP data by the to guest name", async () => {
+  const source = await readSource("../components/invitation/RsvpSection.tsx");
+  const experienceSource = await readSource("../components/InvitationExperience.tsx");
+  const guestSource = await readSource("../lib/rsvp-guest.ts");
+
+  assert.match(experienceSource, /resolveGuestName/);
+  assert.match(experienceSource, /isPersonalizedGuestName/);
+  assert.match(experienceSource, /findRsvpByGuestName\(supabase, guestName\)/);
+  assert.match(experienceSource, /guestName=\{guestName\}/);
+  assert.match(source, /guestName\?: string/);
+  assert.match(source, /readOnly=\{isPersonalizedGuest\}/);
+  assert.match(source, /Please make sure your RSVP details are correct/);
+  assert.match(source, /BACK TO EDIT/);
+  assert.match(source, /YES, SEND RSVP/);
+  assert.match(source, /findRsvpByGuestName\(configuredClient, guestIdentity\)/);
+  assert.match(
+    guestSource,
+    /\.select\("id"\)[\s\S]*\.eq\("name", normalizedName\)[\s\S]*\.limit\(1\)/
+  );
+});
+
 test("gallery transitions focus the newly mounted back button and restore the preview trigger", async () => {
   const source = await readSource("../components/invitation/GallerySection.tsx");
 
