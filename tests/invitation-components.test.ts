@@ -225,10 +225,11 @@ test("transaction section is gated by RSVP and reveals account details on demand
   assert.match(transactionSource, /aria-expanded=\{mode === "revealed"\}/);
   assert.match(transactionSource, /aria-controls="transaction-account-details"/);
   assert.match(transactionSource, /fetch\("\/api\/transaction"/);
-  assert.doesNotMatch(transactionSource, /***REMOVED***|***REMOVED***/);
+  assert.doesNotMatch(transactionSource, /\b\d{10,16}\b/);
   assert.doesNotMatch(transactionSource, /FAIZ ARDYSYAHPUTRA|PRAMESTHI WAHYURING KINASIH/);
-  assert.match(routeSource, /***REMOVED***/);
-  assert.match(routeSource, /***REMOVED***/);
+  assert.doesNotMatch(routeSource, /\b\d{10,16}\b/);
+  assert.match(routeSource, /readTransactionAccounts\(process\.env\)/);
+  assert.match(routeSource, /status:\s*503/);
   assert.match(routeSource, /private, no-store/);
   assert.match(rsvpSource, /RSVP RECEIVED/);
   assert.match(experienceSource, /loadInvitationAccessSafely/);
