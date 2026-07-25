@@ -3,12 +3,25 @@ export const WEDDING_EVENT = {
   dateLabel: "August, 16th 2026",
   start: "2026-08-16T08:00:00+07:00",
   end: "2026-08-16T12:00:00+07:00",
-  location: "Masjid Raya Baiturrahman, Jl. Merdeka No. 1, Bandung",
-  details: "Akad Nikah and wedding reception for Kinan & Faiz.",
+  venue: "Surabaya Suites Hotel",
+  timeLabel: "08.00 WIB",
+  displayAddress: "Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
+  location: "Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
+  mapUrl: "https://maps.app.goo.gl/twKJBT2aUCQFUfLC7",
+  details: "Wedding reception for Kinan & Faiz.",
 } as const;
 
 export const INVITATION_DESIGN_WIDTH = 393;
-export const INVITATION_STORY_HEIGHT = 6_944;
+export const INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION = 6_050;
+export const INVITATION_STORY_HEIGHT = 6_568;
+
+export type TransactionAccess = "locked" | "ready" | "revealed";
+
+export function getInvitationStoryHeight(transaction: TransactionAccess): number {
+  return transaction === "locked"
+    ? INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION
+    : INVITATION_STORY_HEIGHT;
+}
 
 export function calculateInvitationScale(viewportWidth: number): number {
   if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 1;
@@ -52,7 +65,6 @@ export const STORY_ASSETS = {
     calendarIcon: storyAsset("date-event/calendar-icon.svg"),
     underline: storyAsset("date-event/underline.svg"),
     mapPin: storyAsset("date-event/map-pin.svg"),
-    ringsIcon: storyAsset("date-event/rings-icon.svg"),
     giftIcon: storyAsset("date-event/gift-icon.svg"),
   },
   rsvp: {
@@ -142,7 +154,7 @@ export const STORY_PHOTOS = {
         src: STORY_ASSETS.gallery.feature02,
         crop: {
           left: "0%",
-          top: "-8.57%",
+          top: "0%",
           width: "100%",
           height: "108.57%",
           objectFit: "cover",
@@ -163,7 +175,7 @@ export const STORY_PHOTOS = {
           top: "-84.07%",
           width: "164.42%",
           height: "256.08%",
-          objectFit: "fill",
+          objectFit: "cover",
           objectPosition: "50% 50%",
           sizes: "299px",
         },
@@ -253,18 +265,25 @@ export function validateRsvp(
 export interface StoryInteractionState {
   rsvp: "intro" | "form" | "success";
   gallery: "preview" | "expanded";
+  transaction: TransactionAccess;
 }
 
 export type StoryInteractionEvent =
   | { type: "open_rsvp" }
   | { type: "close_rsvp" }
   | { type: "rsvp_submitted" }
+  | { type: "reveal_transaction" }
+  | {
+      type: "restore_invitation_access";
+      transaction: Exclude<TransactionAccess, "locked">;
+    }
   | { type: "open_gallery" }
   | { type: "close_gallery" };
 
 export const INITIAL_STORY_INTERACTION: StoryInteractionState = {
   rsvp: "intro",
   gallery: "preview",
+  transaction: "locked",
 };
 
 export function storyInteractionReducer(
@@ -273,11 +292,25 @@ export function storyInteractionReducer(
 ): StoryInteractionState {
   switch (event.type) {
     case "open_rsvp":
+      if (state.transaction !== "locked") return state;
       return { ...state, rsvp: "form" };
     case "close_rsvp":
       return { ...state, rsvp: "intro" };
     case "rsvp_submitted":
-      return { ...state, rsvp: "success" };
+      return {
+        ...state,
+        rsvp: "success",
+        transaction: state.transaction === "locked" ? "ready" : state.transaction,
+      };
+    case "reveal_transaction":
+      if (state.transaction !== "ready") return state;
+      return { ...state, transaction: "revealed" };
+    case "restore_invitation_access":
+      return {
+        ...state,
+        rsvp: "intro",
+        transaction: event.transaction,
+      };
     case "open_gallery":
       return { ...state, gallery: "expanded" };
     case "close_gallery":

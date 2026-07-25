@@ -1,6 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -10,6 +18,12 @@ import RsvpCelebration from "@/components/invitation/RsvpCelebration";
 import StorySection from "@/components/invitation/StorySection";
 import { type RsvpFormValue, STORY_ASSETS, validateRsvp } from "@/lib/invitation-story";
 import { RSVP_SUCCESS_DURATION_MS } from "@/lib/rsvp-celebration";
+import {
+  acquireRsvpSubmissionLease,
+  releaseRsvpSubmissionLease,
+  renewRsvpSubmissionLease,
+  RSVP_SUBMISSION_LOCK_NAME,
+} from "@/lib/rsvp-persistence";
 import { supabase } from "@/lib/supabase";
 
 interface RsvpSectionProps {
@@ -18,6 +32,8 @@ interface RsvpSectionProps {
   onSubmitted: () => void;
   onClose: () => void;
   rsvpState?: "intro" | "form" | "success";
+  completed?: boolean;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
 const transition = { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const };
@@ -46,9 +62,13 @@ interface Wish {
 function RsvpIntro({
   onOpen,
   rsvpState,
+  completed = false,
+  triggerRef,
 }: {
   onOpen: () => void;
   rsvpState?: "intro" | "form" | "success";
+  completed?: boolean;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const assets = STORY_ASSETS.rsvp;
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -144,19 +164,41 @@ function RsvpIntro({
           className="font-playfair absolute top-[224px] w-full text-center text-[14.5px] leading-6 tracking-[0.291px]"
           {...anim(0.3)}
         >
-          Kindly confirm your attendance
-          <br />
-          by filling out the form below.
+          {completed ? (
+            <>
+              Thank you, your response is saved.
+              <br />
+              Your wedding gift details are now available.
+            </>
+          ) : (
+            <>
+              Kindly confirm your attendance
+              <br />
+              by filling out the form below.
+            </>
+          )}
         </motion.p>
-        <motion.button
-          type="button"
-          onClick={onOpen}
-          className="font-playfair absolute top-[302px] left-1/2 flex h-[50px] w-[297px] -translate-x-1/2 items-center justify-center gap-4 rounded-full bg-[#D6C8B6] text-[15.2px] font-bold tracking-[0.4px] text-[#453F2F] transition-transform active:scale-[0.98]"
-          {...anim(0.35)}
-        >
-          CONFIRM ATTENDANCE
-          <Image src={assets.envelope} alt="" width={22} height={19} />
-        </motion.button>
+        {completed ? (
+          <motion.div
+            role="status"
+            className="font-playfair absolute top-[302px] left-1/2 flex h-[50px] w-[297px] -translate-x-1/2 items-center justify-center gap-4 rounded-full bg-[#D6C8B6] text-[15.2px] font-bold tracking-[0.4px] text-[#453F2F]"
+            {...anim(0.35)}
+          >
+            RSVP RECEIVED
+            <Image src={assets.envelope} alt="" width={22} height={19} />
+          </motion.div>
+        ) : (
+          <motion.button
+            ref={triggerRef}
+            type="button"
+            onClick={onOpen}
+            className="font-playfair absolute top-[302px] left-1/2 flex h-[50px] w-[297px] -translate-x-1/2 items-center justify-center gap-4 rounded-full bg-[#D6C8B6] text-[15.2px] font-bold tracking-[0.4px] text-[#453F2F] transition-transform active:scale-[0.98]"
+            {...anim(0.35)}
+          >
+            CONFIRM ATTENDANCE
+            <Image src={assets.envelope} alt="" width={22} height={19} />
+          </motion.button>
+        )}
         <DecorativeImage
           src={assets.tornTransition}
           box={{ left: 0, top: 436, width: 393, height: 183, transform: "rotate(180deg)" }}
@@ -287,14 +329,26 @@ function RsvpSuccess() {
   );
 }
 
+type RsvpSubmissionOutcome = "submitted" | "already-completed" | "failed" | "busy";
+
+function createRsvpSubmissionOwner(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function RsvpForm({
   mode,
   onSubmitted,
   onClose,
+  onAlreadyCompleted,
 }: {
   mode: "form" | "success";
   onSubmitted: () => void;
   onClose: () => void;
+  onAlreadyCompleted?: () => boolean;
 }) {
   const assets = STORY_ASSETS.rsvpForm;
   const isConfigured = supabase !== null;
@@ -303,6 +357,9 @@ export function RsvpForm({
   const nameErrorId = `${formId}-name-error`;
   const guestsErrorId = `${formId}-guests-error`;
   const attendanceRef = useRef<HTMLSelectElement>(null);
+  const loadingStatusRef = useRef<HTMLDivElement>(null);
+  const submissionInFlightRef = useRef(false);
+  const isMountedRef = useRef(true);
   const [value, setValue] = useState<RsvpFormValue>({
     attendance: "",
     name: "",
@@ -313,39 +370,118 @@ export function RsvpForm({
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleClose = useCallback(() => {
+    if (isSubmitting || submissionInFlightRef.current) return;
+    onClose();
+  }, [isSubmitting, onClose]);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isSubmitting) loadingStatusRef.current?.focus();
+  }, [isSubmitting]);
+
   useEffect(() => {
     if (mode === "form") attendanceRef.current?.focus();
     if (mode === "success") {
       const timer = setTimeout(() => {
-        onClose();
+        handleClose();
       }, RSVP_SUCCESS_DURATION_MS);
       return () => clearTimeout(timer);
     }
-  }, [mode, onClose]);
+  }, [handleClose, mode]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (submissionInFlightRef.current) return;
+    if (onAlreadyCompleted?.()) return;
+
     const nextErrors = validateRsvp(value);
     setErrors(nextErrors);
     setSubmitError("");
 
-    if (Object.keys(nextErrors).length > 0 || !isConfigured || !supabase) return;
+    const client = supabase;
+    if (Object.keys(nextErrors).length > 0 || !isConfigured) return;
+    if (!client) return;
+    const configuredClient = client;
 
+    submissionInFlightRef.current = true;
     setIsSubmitting(true);
-    const { error } = await supabase.from("rsvps").insert({
-      name: value.name.trim(),
-      attending: value.attendance === "attending",
-      guests: value.guests,
-      wishes: value.wishes?.trim() || null,
-    });
-    setIsSubmitting(false);
 
-    if (error) {
+    async function insertOnce(): Promise<RsvpSubmissionOutcome> {
+      if (onAlreadyCompleted?.()) return "already-completed";
+
+      const { error } = await configuredClient.from("rsvps").insert({
+        name: value.name.trim(),
+        attending: value.attendance === "attending",
+        guests: value.guests,
+        wishes: value.wishes?.trim() || null,
+      });
+
+      if (error) return "failed";
+
+      onSubmitted();
+      return "submitted";
+    }
+
+    let outcome: RsvpSubmissionOutcome = "failed";
+
+    try {
+      if (navigator.locks) {
+        outcome = await navigator.locks.request(RSVP_SUBMISSION_LOCK_NAME, insertOnce);
+      } else {
+        let storage: Storage | null = null;
+        try {
+          storage = window.localStorage;
+        } catch {
+          // The in-tab guard still prevents double submits when browser storage is unavailable.
+        }
+
+        if (!storage) {
+          outcome = await insertOnce();
+        } else {
+          const owner = createRsvpSubmissionOwner();
+          if (!acquireRsvpSubmissionLease(storage, owner)) {
+            outcome = "busy";
+          } else {
+            const renewalTimer = window.setInterval(() => {
+              renewRsvpSubmissionLease(storage, owner);
+            }, 10_000);
+
+            try {
+              outcome = await insertOnce();
+            } finally {
+              window.clearInterval(renewalTimer);
+              releaseRsvpSubmissionLease(storage, owner);
+            }
+          }
+        }
+      }
+    } catch {
+      outcome = "failed";
+    } finally {
+      submissionInFlightRef.current = false;
+      if (isMountedRef.current) setIsSubmitting(false);
+    }
+
+    if (!isMountedRef.current || outcome === "already-completed") return;
+
+    if (outcome === "busy") {
+      setSubmitError("An RSVP is already being saved in another tab. Please wait.");
+      return;
+    }
+
+    if (outcome === "failed") {
       setSubmitError("Your response could not be sent. Please try again.");
       return;
     }
 
-    onSubmitted();
   }
 
   return (
@@ -384,178 +520,187 @@ export function RsvpForm({
           />
         </motion.div>
 
-        {/* Buttons slide/fade in */}
-        <motion.button
-          type="button"
-          onClick={onClose}
-          aria-label="Back to invitation"
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-5 left-5 z-30 size-[34px] rounded-full transition-transform hover:scale-105 active:scale-95"
-        >
-          <Image src={STORY_ASSETS.gallery.backIcon} alt="" fill sizes="34px" />
-        </motion.button>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-5 left-[353px] z-30"
-        >
-          <MusicButton />
-        </motion.div>
-
-        {mode === "success" ? (
-          <RsvpSuccess />
-        ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="absolute inset-0"
+        <div inert={isSubmitting || undefined} className="absolute inset-0">
+          {/* Buttons slide/fade in */}
+          <motion.button
+            type="button"
+            disabled={isSubmitting}
+            onClick={handleClose}
+            aria-label="Back to invitation"
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-5 left-5 z-30 size-[34px] rounded-full transition-transform hover:scale-105 active:scale-95"
           >
-            <motion.h2
-              variants={itemVariants}
-              className="font-playfair absolute top-[49px] w-full text-center text-[52.628px] leading-[75.784px] tracking-[1.6011px]"
-            >
-              “RSVP”
-            </motion.h2>
-            <motion.p
-              variants={itemVariants}
-              className="font-playfair absolute top-[136px] w-full text-center text-[14.504px] leading-[19px] text-[#453F2F]/90"
-            >
-              Please send your
-              <br />
-              RSVP for Kinan &amp; Faiz
-            </motion.p>
-            <motion.div
-              variants={itemVariants}
-              className="absolute top-[194px] left-[101px] h-[21px] w-[191px]"
-            >
-              <DecorativeImage
-                src={assets.headingFlourish}
-                box={{ left: 0, top: 0, width: 191, height: 21 }}
-                imageBox={{ left: 0, top: "-988.97%", width: "100%", height: "1588.97%" }}
-                sizes="191px"
-              />
-            </motion.div>
-
-            <form onSubmit={handleSubmit} className="absolute top-[236px] left-[25px] w-[343px]">
-              <motion.label
-                variants={itemVariants}
-                className="font-playfair block text-[15px] text-[#453F2F]"
-              >
-                Your Response:
-                <select
-                  ref={attendanceRef}
-                  value={value.attendance}
-                  onChange={(event) =>
-                    setValue((current) => ({
-                      ...current,
-                      attendance: event.target.value as RsvpFormValue["attendance"],
-                    }))
-                  }
-                  aria-invalid={Boolean(errors.attendance)}
-                  aria-describedby={errors.attendance ? attendanceErrorId : undefined}
-                  className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                >
-                  <option value="">Select response</option>
-                  <option value="attending">Joyfully attending</option>
-                  <option value="not_attending">Unable to attend</option>
-                </select>
-              </motion.label>
-              {errors.attendance ? (
-                <p id={attendanceErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                  {errors.attendance}
-                </p>
-              ) : null}
-
-              <motion.label
-                variants={itemVariants}
-                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-              >
-                Name of guest:
-                <input
-                  value={value.name}
-                  onChange={(event) =>
-                    setValue((current) => ({ ...current, name: event.target.value }))
-                  }
-                  aria-invalid={Boolean(errors.name)}
-                  aria-describedby={errors.name ? nameErrorId : undefined}
-                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                />
-              </motion.label>
-              {errors.name ? (
-                <p id={nameErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                  {errors.name}
-                </p>
-              ) : null}
-
-              <motion.label
-                variants={itemVariants}
-                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-              >
-                Number of guests:
-                <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={value.guests}
-                  onChange={(event) =>
-                    setValue((current) => ({ ...current, guests: Number(event.target.value) }))
-                  }
-                  aria-invalid={Boolean(errors.guests)}
-                  aria-describedby={errors.guests ? guestsErrorId : undefined}
-                  className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                />
-              </motion.label>
-              {errors.guests ? (
-                <p id={guestsErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                  {errors.guests}
-                </p>
-              ) : null}
-
-              <motion.label
-                variants={itemVariants}
-                className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-              >
-                Wishes & Prayers:
-                <textarea
-                  rows={2}
-                  value={value.wishes}
-                  onChange={(event) =>
-                    setValue((current) => ({ ...current, wishes: event.target.value }))
-                  }
-                  className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                  placeholder="Leave a message for Kinan & Faiz..."
-                />
-              </motion.label>
-
-              <motion.button
-                variants={itemVariants}
-                whileHover={{ scale: 1.015 }}
-                whileTap={{ scale: 0.985 }}
-                type="submit"
-                disabled={!isConfigured || isSubmitting}
-                className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isSubmitting ? "SENDING..." : "CONFIRM"}
-              </motion.button>
-              {!isConfigured ? (
-                <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
-                  RSVP will be available soon.
-                </p>
-              ) : null}
-              {submitError ? (
-                <p role="alert" className="mt-3 text-center text-xs text-[#7C2D24]">
-                  {submitError}
-                </p>
-              ) : null}
-            </form>
+            <Image src={STORY_ASSETS.gallery.backIcon} alt="" fill sizes="34px" />
+          </motion.button>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-5 left-[353px] z-30"
+          >
+            <MusicButton />
           </motion.div>
-        )}
+
+          {mode === "success" ? (
+            <RsvpSuccess />
+          ) : (
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="absolute inset-0"
+            >
+              <motion.h2
+                variants={itemVariants}
+                className="font-playfair absolute top-[49px] w-full text-center text-[52.628px] leading-[75.784px] tracking-[1.6011px]"
+              >
+                “RSVP”
+              </motion.h2>
+              <motion.p
+                variants={itemVariants}
+                className="font-playfair absolute top-[136px] w-full text-center text-[14.504px] leading-[19px] text-[#453F2F]/90"
+              >
+                Please send your
+                <br />
+                RSVP for Kinan &amp; Faiz
+              </motion.p>
+              <motion.div
+                variants={itemVariants}
+                className="absolute top-[194px] left-[101px] h-[21px] w-[191px]"
+              >
+                <DecorativeImage
+                  src={assets.headingFlourish}
+                  box={{ left: 0, top: 0, width: 191, height: 21 }}
+                  imageBox={{ left: 0, top: "-988.97%", width: "100%", height: "1588.97%" }}
+                  sizes="191px"
+                />
+              </motion.div>
+
+              <form onSubmit={handleSubmit} className="absolute top-[236px] left-[25px] w-[343px]">
+                <motion.label
+                  variants={itemVariants}
+                  className="font-playfair block text-[15px] text-[#453F2F]"
+                >
+                  Your Response:
+                  <select
+                    ref={attendanceRef}
+                    value={value.attendance}
+                    onChange={(event) =>
+                      setValue((current) => ({
+                        ...current,
+                        attendance: event.target.value as RsvpFormValue["attendance"],
+                      }))
+                    }
+                    aria-invalid={Boolean(errors.attendance)}
+                    aria-describedby={errors.attendance ? attendanceErrorId : undefined}
+                    className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                  >
+                    <option value="">Select response</option>
+                    <option value="attending">Joyfully attending</option>
+                    <option value="not_attending">Unable to attend</option>
+                  </select>
+                </motion.label>
+                {errors.attendance ? (
+                  <p id={attendanceErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                    {errors.attendance}
+                  </p>
+                ) : null}
+
+                <motion.label
+                  variants={itemVariants}
+                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                >
+                  Name of guest:
+                  <input
+                    value={value.name}
+                    onChange={(event) =>
+                      setValue((current) => ({ ...current, name: event.target.value }))
+                    }
+                    aria-invalid={Boolean(errors.name)}
+                    aria-describedby={errors.name ? nameErrorId : undefined}
+                    className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                  />
+                </motion.label>
+                {errors.name ? (
+                  <p id={nameErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                    {errors.name}
+                  </p>
+                ) : null}
+
+                <motion.label
+                  variants={itemVariants}
+                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                >
+                  Number of guests:
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={value.guests}
+                    onChange={(event) =>
+                      setValue((current) => ({ ...current, guests: Number(event.target.value) }))
+                    }
+                    aria-invalid={Boolean(errors.guests)}
+                    aria-describedby={errors.guests ? guestsErrorId : undefined}
+                    className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                  />
+                </motion.label>
+                {errors.guests ? (
+                  <p id={guestsErrorId} className="mt-1 text-xs text-[#7C2D24]">
+                    {errors.guests}
+                  </p>
+                ) : null}
+
+                <motion.label
+                  variants={itemVariants}
+                  className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
+                >
+                  Wishes & Prayers:
+                  <textarea
+                    rows={2}
+                    value={value.wishes}
+                    onChange={(event) =>
+                      setValue((current) => ({ ...current, wishes: event.target.value }))
+                    }
+                    className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
+                    placeholder="Leave a message for Kinan & Faiz..."
+                  />
+                </motion.label>
+
+                <motion.button
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.015 }}
+                  whileTap={{ scale: 0.985 }}
+                  type="submit"
+                  disabled={!isConfigured || isSubmitting}
+                  className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSubmitting ? "SENDING..." : "CONFIRM"}
+                </motion.button>
+                {!isConfigured ? (
+                  <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
+                    RSVP will be available soon.
+                  </p>
+                ) : null}
+                {submitError ? (
+                  <p role="alert" className="mt-3 text-center text-xs text-[#7C2D24]">
+                    {submitError}
+                  </p>
+                ) : null}
+              </form>
+            </motion.div>
+          )}
+        </div>
         {isSubmitting && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#FAEBE0]/80 backdrop-blur-[1.5px]">
+          <div
+            ref={loadingStatusRef}
+            role="status"
+            aria-live="polite"
+            tabIndex={-1}
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-[#FAEBE0]/80 backdrop-blur-[1.5px] outline-none"
+          >
             <svg
               className="mb-4 h-10 w-10 animate-spin text-[#7C5649] motion-reduce:animate-none"
               xmlns="http://www.w3.org/2000/svg"
@@ -592,6 +737,8 @@ export default function RsvpSection({
   onSubmitted,
   onClose,
   rsvpState,
+  completed = false,
+  triggerRef,
 }: RsvpSectionProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -605,7 +752,12 @@ export default function RsvpSection({
         transition={shouldReduceMotion ? { duration: 0 } : transition}
       >
         {mode === "intro" ? (
-          <RsvpIntro onOpen={onOpen} rsvpState={rsvpState} />
+          <RsvpIntro
+            onOpen={onOpen}
+            rsvpState={rsvpState}
+            completed={completed}
+            triggerRef={triggerRef}
+          />
         ) : (
           <RsvpForm mode={mode} onSubmitted={onSubmitted} onClose={onClose} />
         )}

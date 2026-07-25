@@ -1,5 +1,7 @@
 "use client";
 
+import { type RefObject } from "react";
+
 import CouplePhotoSection from "@/components/invitation/CouplePhotoSection";
 import DateEventSection from "@/components/invitation/DateEventSection";
 import GallerySection from "@/components/invitation/GallerySection";
@@ -10,17 +12,34 @@ import RsvpSection from "@/components/invitation/RsvpSection";
 import ThankYouSection from "@/components/invitation/ThankYouSection";
 import TransactionSection from "@/components/invitation/TransactionSection";
 import MainScreen from "@/components/main-screen/MainScreen";
-import { type StoryInteractionState, type StoryInteractionEvent } from "@/lib/invitation-story";
+import {
+  getInvitationStoryHeight,
+  type StoryInteractionState,
+  type StoryInteractionEvent,
+} from "@/lib/invitation-story";
 
 interface InvitationStoryProps {
   interaction: StoryInteractionState;
   dispatch: React.Dispatch<StoryInteractionEvent>;
+  rsvpTriggerRef?: RefObject<HTMLButtonElement | null>;
+  transactionRevealRef?: RefObject<HTMLButtonElement | null>;
+  onRsvpOpen?: () => void;
+  onTransactionReveal?: () => void;
 }
 
-export default function InvitationStory({ interaction, dispatch }: InvitationStoryProps) {
+export default function InvitationStory({
+  interaction,
+  dispatch,
+  rsvpTriggerRef,
+  transactionRevealRef,
+  onRsvpOpen,
+  onTransactionReveal,
+}: InvitationStoryProps) {
+  const storyHeight = getInvitationStoryHeight(interaction.transaction);
+
   return (
     <MusicProvider>
-      <ResponsiveStoryCanvas>
+      <ResponsiveStoryCanvas storyHeight={storyHeight}>
         <div className="relative min-h-full w-full bg-[#FAEBE0]">
           <MainScreen />
           <GroomBrideSection />
@@ -28,12 +47,20 @@ export default function InvitationStory({ interaction, dispatch }: InvitationSto
           <DateEventSection />
           <RsvpSection
             mode="intro"
-            onOpen={() => dispatch({ type: "open_rsvp" })}
+            onOpen={onRsvpOpen ?? (() => dispatch({ type: "open_rsvp" }))}
             onSubmitted={() => {}}
             onClose={() => {}}
             rsvpState={interaction.rsvp}
+            completed={interaction.transaction !== "locked"}
+            triggerRef={rsvpTriggerRef}
           />
-          <TransactionSection />
+          {interaction.transaction !== "locked" ? (
+            <TransactionSection
+              mode={interaction.transaction}
+              onReveal={onTransactionReveal ?? (() => dispatch({ type: "reveal_transaction" }))}
+              revealButtonRef={transactionRevealRef}
+            />
+          ) : null}
           <GallerySection
             mode={interaction.gallery}
             onOpen={() => dispatch({ type: "open_gallery" })}

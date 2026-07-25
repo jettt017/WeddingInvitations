@@ -62,8 +62,8 @@ const qwitcherGrypen = Qwitcher_Grypen({
 export const metadata: Metadata = {
   title: "Kinan & Faiz | The Wedding Invitation",
   description:
-    "You are cordially invited to celebrate the marriage of Kinan and Faiz on August 16, 2026, in Bandung.",
-  keywords: ["wedding", "invitation", "Kinan & Faiz", "Bandung"],
+    "You are cordially invited to celebrate the marriage of Kinan and Faiz on August 16, 2026, in Surabaya.",
+  keywords: ["wedding", "invitation", "Kinan & Faiz", "Surabaya"],
   authors: [{ name: "Kinan & Faiz" }],
   openGraph: {
     title: "Kinan & Faiz | The Wedding Invitation",

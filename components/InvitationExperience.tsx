@@ -1,6 +1,14 @@
 "use client";
 
-import { useReducer, useSyncExternalStore } from "react";
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
 
 import InvitationStory from "@/components/invitation/InvitationStory";
@@ -13,8 +21,15 @@ import {
   calculateInvitationScale,
   INVITATION_DESIGN_WIDTH,
 } from "@/lib/invitation-story";
+import {
+  loadInvitationAccessSafely,
+  persistInvitationAccessSafely,
+  RSVP_ACCESS_STORAGE_KEY,
+} from "@/lib/rsvp-persistence";
 
 const transitionEase = [0.16, 1, 0.3, 1] as const;
+const dialogFocusableSelector =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 function subscribeToViewport(onStoreChange: () => void): () => void {
   window.addEventListener("resize", onStoreChange);
@@ -36,6 +51,13 @@ export default function InvitationExperience() {
     INITIAL_STORY_INTERACTION
   );
   const shouldReduceMotion = useReducedMotion();
+  const [isRsvpDialogExiting, setIsRsvpDialogExiting] = useState(false);
+  const rsvpTriggerRef = useRef<HTMLButtonElement>(null);
+  const transactionRevealRef = useRef<HTMLButtonElement>(null);
+  const rsvpDialogRef = useRef<HTMLDivElement>(null);
+  const isRsvpDialogClosingRef = useRef(false);
+  const shouldFocusRsvpTriggerRef = useRef(false);
+  const shouldFocusTransactionRef = useRef(false);
 
   const viewportWidth = useSyncExternalStore(
     subscribeToViewport,
@@ -43,6 +65,163 @@ export default function InvitationExperience() {
     getServerViewportWidth
   );
   const scale = calculateInvitationScale(viewportWidth);
+  const isRsvpOverlayOpen =
+    view === "main" && (interaction.rsvp === "form" || interaction.rsvp === "success");
+  const shouldHideStory = isRsvpOverlayOpen || isRsvpDialogExiting;
+
+  const restorePersistedAccess = useCallback(() => {
+    const transaction = loadInvitationAccessSafely(() => window.localStorage);
+
+    if (transaction !== "locked") {
+      dispatchInteraction({
+        type: "restore_invitation_access",
+        transaction,
+      });
+    }
+
+    return transaction;
+  }, []);
+
+  useEffect(() => {
+    restorePersistedAccess();
+
+    function handleStorage(event: StorageEvent) {
+      if (event.key !== RSVP_ACCESS_STORAGE_KEY) return;
+
+      if (rsvpDialogRef.current) {
+        isRsvpDialogClosingRef.current = true;
+        setIsRsvpDialogExiting(true);
+        shouldFocusTransactionRef.current = true;
+      }
+
+      restorePersistedAccess();
+    }
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [restorePersistedAccess]);
+
+  const handleRsvpOpen = useCallback(() => {
+    if (restorePersistedAccess() === "locked") {
+      isRsvpDialogClosingRef.current = false;
+      dispatchInteraction({ type: "open_rsvp" });
+    }
+  }, [restorePersistedAccess]);
+
+  const handleRsvpCompletionCheck = useCallback(() => {
+    const isCompleted = restorePersistedAccess() !== "locked";
+
+    if (isCompleted && rsvpDialogRef.current) {
+      isRsvpDialogClosingRef.current = true;
+      setIsRsvpDialogExiting(true);
+      shouldFocusTransactionRef.current = true;
+    }
+
+    return isCompleted;
+  }, [restorePersistedAccess]);
+
+  const handleRsvpSubmitted = useCallback(() => {
+    const transaction = interaction.transaction === "revealed" ? "revealed" : "ready";
+
+    persistInvitationAccessSafely(() => window.localStorage, transaction);
+
+    if (isRsvpDialogClosingRef.current) {
+      dispatchInteraction({
+        type: "restore_invitation_access",
+        transaction,
+      });
+      return;
+    }
+
+    dispatchInteraction({ type: "rsvp_submitted" });
+  }, [interaction.transaction]);
+
+  const handleRsvpClose = useCallback(() => {
+    isRsvpDialogClosingRef.current = true;
+    setIsRsvpDialogExiting(true);
+
+    if (interaction.rsvp === "success") {
+      shouldFocusTransactionRef.current = true;
+    } else {
+      shouldFocusRsvpTriggerRef.current = true;
+    }
+
+    dispatchInteraction({ type: "close_rsvp" });
+  }, [interaction.rsvp]);
+
+  const handleTransactionReveal = useCallback(() => {
+    persistInvitationAccessSafely(() => window.localStorage, "revealed");
+    dispatchInteraction({ type: "reveal_transaction" });
+  }, []);
+
+  const handleRsvpDialogKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab") return;
+
+    const focusableElements = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>(dialogFocusableSelector)
+    ).filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      event.currentTarget.focus();
+      return;
+    }
+
+    const activeIndex = focusableElements.indexOf(document.activeElement as HTMLElement);
+    const nextIndex = event.shiftKey ? focusableElements.length - 1 : 0;
+    const shouldWrap = event.shiftKey
+      ? activeIndex <= 0
+      : activeIndex === -1 || activeIndex === focusableElements.length - 1;
+
+    if (shouldWrap) {
+      event.preventDefault();
+      focusableElements[nextIndex]?.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      isRsvpOverlayOpen ||
+      isRsvpDialogExiting ||
+      interaction.transaction === "locked" ||
+      !shouldFocusTransactionRef.current
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const revealButton = transactionRevealRef.current;
+      if (!revealButton) return;
+
+      revealButton.focus();
+      shouldFocusTransactionRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [interaction.transaction, isRsvpDialogExiting, isRsvpOverlayOpen]);
+
+  useEffect(() => {
+    if (
+      isRsvpOverlayOpen ||
+      isRsvpDialogExiting ||
+      interaction.transaction !== "locked" ||
+      !shouldFocusRsvpTriggerRef.current
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      rsvpTriggerRef.current?.focus();
+      shouldFocusRsvpTriggerRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [interaction.transaction, isRsvpDialogExiting, isRsvpOverlayOpen]);
+
+  const handleRsvpExitComplete = useCallback(() => {
+    isRsvpDialogClosingRef.current = false;
+    setIsRsvpDialogExiting(false);
+  }, []);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -68,6 +247,8 @@ export default function InvitationExperience() {
               key="main"
               role="region"
               aria-labelledby="main-screen-title"
+              aria-hidden={shouldHideStory || undefined}
+              inert={shouldHideStory || undefined}
               tabIndex={0}
               data-lenis-prevent=""
               className="focus-visible:ring-brand-gold-dark absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
@@ -81,15 +262,29 @@ export default function InvitationExperience() {
                 ease: transitionEase,
               }}
             >
-              <InvitationStory interaction={interaction} dispatch={dispatchInteraction} />
+              <InvitationStory
+                interaction={interaction}
+                dispatch={dispatchInteraction}
+                rsvpTriggerRef={rsvpTriggerRef}
+                transactionRevealRef={transactionRevealRef}
+                onRsvpOpen={handleRsvpOpen}
+                onTransactionReveal={handleTransactionReveal}
+              />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Fullscreen scaled RSVP Form Overlay */}
-        <AnimatePresence>
-          {view === "main" && (interaction.rsvp === "form" || interaction.rsvp === "success") && (
+        <AnimatePresence onExitComplete={handleRsvpExitComplete}>
+          {isRsvpOverlayOpen && (
             <motion.div
+              key="rsvp-dialog"
+              ref={rsvpDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={interaction.rsvp === "success" ? "RSVP confirmation" : "RSVP form"}
+              tabIndex={-1}
+              onKeyDown={handleRsvpDialogKeyDown}
               initial={{
                 opacity: 0,
                 y: shouldReduceMotion ? 0 : 30,
@@ -126,9 +321,10 @@ export default function InvitationExperience() {
                   }}
                 >
                   <RsvpForm
-                    mode={interaction.rsvp}
-                    onSubmitted={() => dispatchInteraction({ type: "rsvp_submitted" })}
-                    onClose={() => dispatchInteraction({ type: "close_rsvp" })}
+                    mode={interaction.rsvp === "success" ? "success" : "form"}
+                    onSubmitted={handleRsvpSubmitted}
+                    onClose={handleRsvpClose}
+                    onAlreadyCompleted={handleRsvpCompletionCheck}
                   />
                 </div>
               </div>

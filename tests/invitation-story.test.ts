@@ -15,6 +15,13 @@ test("wedding event is scheduled for 16 August 2026 in Jakarta time", async () =
 
   assert.equal(story.WEDDING_EVENT.dateLabel, "August, 16th 2026");
   assert.equal(story.WEDDING_EVENT.start, "2026-08-16T08:00:00+07:00");
+  assert.equal(story.WEDDING_EVENT.venue, "Surabaya Suites Hotel");
+  assert.equal(
+    story.WEDDING_EVENT.location,
+    "Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271"
+  );
+  assert.equal(story.WEDDING_EVENT.mapUrl, "https://maps.app.goo.gl/twKJBT2aUCQFUfLC7");
+  assert.doesNotMatch(story.WEDDING_EVENT.details, /akad/i);
 });
 
 test("countdown separates remaining time into days hours minutes and seconds", async () => {
@@ -98,7 +105,8 @@ test("calendar link contains the configured couple date and venue", async () => 
   assert.equal(url.searchParams.get("action"), "TEMPLATE");
   assert.match(url.searchParams.get("text") ?? "", /Kinan.*Faiz/i);
   assert.match(url.searchParams.get("dates") ?? "", /^20260816T010000Z\//);
-  assert.match(url.searchParams.get("location") ?? "", /Bandung/i);
+  assert.match(url.searchParams.get("location") ?? "", /Surabaya Suites Hotel/i);
+  assert.match(url.searchParams.get("location") ?? "", /Surabaya 60271/i);
 });
 
 test("RSVP integration is disabled when Supabase values are missing", async () => {
@@ -156,20 +164,55 @@ test("gallery interaction opens and closes the expanded design", async () => {
   );
 });
 
-test("RSVP interaction opens the form and records a successful submission", async () => {
+test("RSVP completion unlocks and preserves transaction access", async () => {
   const story = await loadStoryModule();
 
   assert.equal(typeof story.storyInteractionReducer, "function");
   assert.equal(typeof story.INITIAL_STORY_INTERACTION, "object");
   if (!("storyInteractionReducer" in story) || !("INITIAL_STORY_INTERACTION" in story)) return;
 
+  assert.equal(story.INITIAL_STORY_INTERACTION.transaction, "locked");
+
+  const ignoredReveal = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
+    type: "reveal_transaction",
+  });
   const form = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
     type: "open_rsvp",
   });
   const success = story.storyInteractionReducer(form, { type: "rsvp_submitted" });
+  const closed = story.storyInteractionReducer(success, { type: "close_rsvp" });
+  const revealed = story.storyInteractionReducer(closed, { type: "reveal_transaction" });
+  const repeated = story.storyInteractionReducer(revealed, { type: "rsvp_submitted" });
+  const restored = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
+    type: "restore_invitation_access",
+    transaction: "revealed",
+  });
+  const restoredWhileOpen = story.storyInteractionReducer(form, {
+    type: "restore_invitation_access",
+    transaction: "ready",
+  });
 
+  assert.equal(ignoredReveal.transaction, "locked");
   assert.equal(form.rsvp, "form");
   assert.equal(success.rsvp, "success");
+  assert.equal(success.transaction, "ready");
+  assert.equal(closed.rsvp, "intro");
+  assert.equal(closed.transaction, "ready");
+  assert.equal(revealed.transaction, "revealed");
+  assert.equal(repeated.transaction, "revealed");
+  assert.equal(restored.transaction, "revealed");
+  assert.equal(restoredWhileOpen.rsvp, "intro");
+  assert.equal(restoredWhileOpen.transaction, "ready");
+});
+
+test("transaction visibility controls the responsive story height", async () => {
+  const story = await loadStoryModule();
+
+  assert.equal(story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION, 6_050);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6_568);
+  assert.equal(story.getInvitationStoryHeight("locked"), 6_050);
+  assert.equal(story.getInvitationStoryHeight("ready"), 6_568);
+  assert.equal(story.getInvitationStoryHeight("revealed"), 6_568);
 });
 
 test("story assets are committed local files rather than temporary Figma URLs", async () => {
@@ -242,12 +285,20 @@ test("photo slots record meaningful local fallbacks and their final replacement 
     /gallery\/gallery-feature-03\.webp$/
   );
   assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.objectPosition, "50% 100%");
+  assert.equal(story.STORY_PHOTOS.galleryFeature02.fallbacks[0].crop.top, "0%");
+  assert.ok(
+    [
+      story.STORY_PHOTOS.galleryFeature01,
+      story.STORY_PHOTOS.galleryFeature02,
+      story.STORY_PHOTOS.galleryFeature03,
+    ].every((photo) => photo.fallbacks[0].crop.objectFit === "cover")
+  );
   assert.deepEqual(story.STORY_PHOTOS.galleryFeature03.fallbacks[0].crop, {
     left: "-12.49%",
     top: "-84.07%",
     width: "164.42%",
     height: "256.08%",
-    objectFit: "fill",
+    objectFit: "cover",
     objectPosition: "50% 50%",
     sizes: "299px",
   });
@@ -256,7 +307,11 @@ test("photo slots record meaningful local fallbacks and their final replacement 
 test("updated story height includes the 518 pixel transaction section", async () => {
   const story = await loadStoryModule();
 
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6_944);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6_568);
+  assert.equal(
+    story.INVITATION_STORY_HEIGHT - story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION,
+    518
+  );
 });
 
 test("new gallery and transaction assets stay lightweight", async () => {

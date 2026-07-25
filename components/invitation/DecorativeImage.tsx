@@ -47,7 +47,7 @@ export default function DecorativeImage({
   };
 
   return (
-    <motion.div style={positioning} {...motionProps}>
+    <motion.div className="pointer-events-none" style={positioning} {...motionProps}>
       <div
         aria-hidden={alt ? undefined : true}
         className={`pointer-events-none absolute inset-0 overflow-hidden ${className}`}

@@ -101,11 +101,11 @@ function Polaroid({
 
   return (
     <motion.div
-      className="absolute h-[223px] w-[199px] bg-[#D9D9D9] p-[9px] pb-[39px] shadow-sm"
+      className="absolute h-[222.852px] w-[199.413px] bg-[#D9D9D9] shadow-sm"
       style={{ left, top, rotate }}
       {...anim(delay, 25)}
     >
-      <div className="relative h-full w-full overflow-hidden bg-black">
+      <div className="absolute top-[9.37px] left-[8.04px] h-[174.698px] w-[182.537px] overflow-hidden bg-black">
         <div
           className="absolute"
           style={{

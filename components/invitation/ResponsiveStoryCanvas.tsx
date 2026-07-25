@@ -21,7 +21,15 @@ function getServerViewportWidth(): number {
   return INVITATION_DESIGN_WIDTH;
 }
 
-export default function ResponsiveStoryCanvas({ children }: { children: ReactNode }) {
+interface ResponsiveStoryCanvasProps {
+  children: ReactNode;
+  storyHeight?: number;
+}
+
+export default function ResponsiveStoryCanvas({
+  children,
+  storyHeight = INVITATION_STORY_HEIGHT,
+}: ResponsiveStoryCanvasProps) {
   const viewportWidth = useSyncExternalStore(
     subscribeToViewport,
     getViewportWidth,
@@ -35,7 +43,7 @@ export default function ResponsiveStoryCanvas({ children }: { children: ReactNod
       data-responsive-story-wrapper=""
       style={{
         width: INVITATION_DESIGN_WIDTH * scale,
-        height: INVITATION_STORY_HEIGHT * scale,
+        height: storyHeight * scale,
       }}
     >
       <div
@@ -43,7 +51,7 @@ export default function ResponsiveStoryCanvas({ children }: { children: ReactNod
         data-responsive-story-canvas=""
         style={{
           width: INVITATION_DESIGN_WIDTH,
-          height: INVITATION_STORY_HEIGHT,
+          height: storyHeight,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}
