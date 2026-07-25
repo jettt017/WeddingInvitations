@@ -197,10 +197,8 @@ test("couple cover and gallery preview render configured photos without placehol
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature02/);
   assert.match(gallerySource, /STORY_PHOTOS\.galleryFeature03/);
   assert.match(gallerySource, /src=\{fallback\.src\}/);
-  assert.match(gallerySource, /aria-hidden="true"/);
-  assert.match(gallerySource, /object-cover/);
-  assert.match(gallerySource, /blur-\[10px\]/);
-  assert.match(gallerySource, /alt=\{photo\.alt\}[\s\S]*object-contain/);
+  assert.match(gallerySource, /alt=\{photo\.alt\}[\s\S]*object-cover/);
+  assert.doesNotMatch(gallerySource, /blur-\[10px\]|object-contain/);
   assert.doesNotMatch(gallerySource, /const crop = fallback\.crop/);
   assert.match(gallerySource, /alt=\{photo\.alt\}/);
   assert.doesNotMatch(source, /photo placeholder/i);
