@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
 async function readSource(path: string): Promise<string> {
@@ -16,8 +16,24 @@ test("the responsive shell hydrates only one invitation experience", async () =>
   assert.match(pageSource, /<DesktopPreview>[\s\S]*<InvitationExperience/);
   assert.doesNotMatch(layoutSource, /LenisProvider|ReactLenis/);
   assert.match(previewSource, /lg:block/);
-  assert.match(previewSource, /bg-\[url\('\/images\/desktop\/desktop-background\.webp'\)\]/);
+  assert.match(previewSource, /data-figma-node="154:40"/);
+  assert.match(previewSource, /bg-\[url\('\/images\/desktop\/desktop-background-figma\.webp'\)\]/);
+  assert.doesNotMatch(previewSource, /bg-black\/15/);
   assert.doesNotMatch(previewSource, /<Image|<img/);
+});
+
+test("the Figma desktop background remains a lightweight local asset", async () => {
+  const assetUrl = new URL(
+    "../public/images/desktop/desktop-background-figma.webp",
+    import.meta.url
+  );
+  const assetStats = await stat(assetUrl).catch(() => null);
+
+  assert.ok(assetStats, "expected the exported Figma desktop background to exist");
+  assert.ok(
+    assetStats.size <= 300_000,
+    `expected desktop background to be at most 300 KB, received ${assetStats.size} bytes`
+  );
 });
 
 test("offscreen story sections are contained and entrance motion only runs once", async () => {
