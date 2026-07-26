@@ -48,7 +48,7 @@ test("RSVP lookup trims the URL guest identity and detects an existing response"
   if (!rsvpGuest.findRsvpByGuestName) return;
 
   const result = await rsvpGuest.findRsvpByGuestName(
-    client as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
+    client as unknown as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
     "  Rina   &   Fajar  "
   );
 
@@ -75,14 +75,14 @@ test("RSVP lookup distinguishes missing data from a failed Supabase check", asyn
 
   assert.equal(
     await rsvpGuest.findRsvpByGuestName(
-      missing.client as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
+      missing.client as unknown as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
       "Rina & Fajar"
     ),
     "missing"
   );
   assert.equal(
     await rsvpGuest.findRsvpByGuestName(
-      failed.client as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
+      failed.client as unknown as Parameters<typeof rsvpGuest.findRsvpByGuestName>[0],
       "Rina & Fajar"
     ),
     "failed"

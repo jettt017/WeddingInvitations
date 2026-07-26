@@ -275,12 +275,6 @@ export default function InvitationExperience() {
     setIsRsvpDialogExiting(false);
   }, []);
 
-  const viewportWidth = useSyncExternalStore(
-    subscribeToViewport,
-    getViewportWidth,
-    getServerViewportWidth
-  );
-  const scale = calculateInvitationScale(viewportWidth);
 
   return (
     <MotionConfig reducedMotion="user">
