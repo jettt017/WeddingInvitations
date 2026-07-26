@@ -10,16 +10,16 @@ import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -100,16 +100,16 @@ function Polaroid({
 
   return (
     <motion.div
-      className="absolute h-[223px] w-[199px] bg-[#D9D9D9] p-[9px] pb-[39px] shadow-sm"
+      className="absolute h-[222.852px] w-[199.413px] bg-[#D9D9D9] shadow-sm"
       style={{ left, top, rotate }}
       {...anim(delay, 25)}
     >
-      <div className="relative h-full w-full overflow-hidden">
+      <div className="absolute top-[9.37px] left-[8.04px] h-[174.698px] w-[182.537px] overflow-hidden">
         <Image
           src={fallback.src}
           alt={photo.alt}
           fill
-          sizes="181px"
+          sizes={fallback.sizes}
           className="object-cover"
           style={{ objectPosition: fallback.objectPosition }}
         />

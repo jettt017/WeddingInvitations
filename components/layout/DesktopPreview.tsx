@@ -6,23 +6,18 @@ interface DesktopPreviewProps {
 
 export default function DesktopPreview({ children }: DesktopPreviewProps) {
   return (
-    <div className="fixed inset-0">
+    <div
+      data-figma-node="154:40"
+      className="relative h-dvh w-full overflow-hidden bg-white lg:fixed lg:inset-0"
+    >
       {/* Layer 1 — Desktop background: fills entire viewport, stays behind everything */}
-      <div className="absolute inset-0 z-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/desktop/desktop-background.webp"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover object-center"
-        />
-      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 hidden bg-[url('/images/desktop/desktop-background-figma.webp')] bg-cover bg-center lg:block"
+      />
 
-      {/* Layer 2 — Overlay: sits above background, does NOT blur the phone */}
-      <div className="absolute inset-0 z-10 bg-black/15" />
-
-      {/* Layer 3 — Phone preview: floats above both, right-aligned, vertically centered */}
-      <div className="absolute z-20 top-1/2 right-20 -translate-y-1/2 w-phone h-phone overflow-hidden rounded-[2.5rem] shadow-2xl">
+      {/* Layer 2 — Phone preview: floats above the background, right-aligned, vertically centered */}
+      <div className="lg:h-phone lg:w-phone absolute inset-0 z-20 overflow-hidden lg:inset-auto lg:top-1/2 lg:right-20 lg:-translate-y-1/2 lg:rounded-[2.5rem] lg:shadow-2xl">
         {children}
       </div>
     </div>

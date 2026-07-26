@@ -7,16 +7,16 @@ import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS } from "@/lib/invitation-story";
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -35,7 +35,7 @@ function Portrait({
   const left = isGroom ? 215 : 17;
   const top = isGroom ? 56 : 497;
   const photoBox = isGroom
-    ? { left: -178, top: -282, width: 490, height: 734 }
+    ? { left: -117, top: -94, width: 349, height: 523 }
     : { left: -99, top: -93, width: 343, height: 513 };
 
   return (
@@ -51,7 +51,7 @@ function Portrait({
             src={photo}
             alt={isGroom ? "Faiz Ardisyahputra" : "Pramesthi Wahyuring Kinasih"}
             fill
-            sizes={isGroom ? "490px" : "343px"}
+            sizes={isGroom ? "349px" : "343px"}
             className="object-cover"
           />
         </div>

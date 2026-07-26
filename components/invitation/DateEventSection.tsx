@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
@@ -20,16 +20,16 @@ type CountdownDisplayValue = Partial<CountdownValue>;
 const EMPTY_COUNTDOWN_DISPLAY: CountdownDisplayValue = {};
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -82,37 +82,34 @@ function Countdown() {
   );
 }
 
-function EventCard({ title, icon, top, delay }: { title: string; icon: string; top: number; delay: number }) {
-  const mapUrl = useMemo(
-    () =>
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        WEDDING_EVENT.location
-      )}`,
-    []
-  );
-
+function ReceptionCard() {
   return (
     <motion.article
-      className="absolute left-[39px] h-[328.7px] w-[315.283px] rounded-[20.124px] border border-black bg-[#FAEBE0]"
-      style={{ top }}
-      {...anim(delay, 25)}
+      className="absolute top-[563px] left-[39px] h-[328.7px] w-[315.283px] rounded-[20.124px] border border-black bg-[#FAEBE0]"
+      {...anim(0.4, 25)}
     >
       <div className="absolute top-[34px] left-1/2 size-[43px] -translate-x-1/2">
-        <Image src={icon} alt="" fill sizes="43px" className="object-contain" />
+        <Image
+          src={STORY_ASSETS.dateEvent.giftIcon}
+          alt=""
+          fill
+          sizes="43px"
+          className="object-contain"
+        />
       </div>
       <h3 className="font-playfair absolute top-[98px] w-full text-center text-[19.925px] leading-[28.692px] tracking-[0.6062px]">
-        {title}
+        RESEPSI
       </h3>
       <p className="font-playfair absolute top-[142px] w-full text-center text-[16.271px] leading-[22.78px] font-bold tracking-[0.4068px]">
-        08.00 WIB
+        {WEDDING_EVENT.timeLabel}
       </p>
-      <p className="font-playfair absolute top-[201px] w-full text-center text-[15.2px] leading-[22.2px] tracking-[0.3px]">
-        Masjid Raya Baiturrahman
+      <p className="font-playfair absolute top-[197px] left-[20px] w-[275px] text-center text-[15.2px] leading-[22.2px] tracking-[0.3px]">
+        {WEDDING_EVENT.venue}
         <br />
-        Jl. Merdeka No. 1, Bandung
+        {WEDDING_EVENT.displayAddress}
       </p>
       <a
-        href={mapUrl}
+        href={WEDDING_EVENT.mapUrl}
         target="_blank"
         rel="noreferrer"
         className="font-playfair absolute top-[270px] left-1/2 flex -translate-x-1/2 items-center gap-2 text-[16px] leading-6 whitespace-nowrap underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2"
@@ -128,7 +125,7 @@ export default function DateEventSection() {
   const assets = STORY_ASSETS.dateEvent;
 
   return (
-    <StorySection figmaNode="106:2" section="date-event" height={1314}>
+    <StorySection figmaNode="106:2" section="date-event" height={938}>
       <DecorativeImage
         src={assets.topCanopy}
         box={{ left: -196, top: -97, width: 718, height: 173 }}
@@ -219,12 +216,11 @@ export default function DateEventSection() {
         {...fadeAnim(0.35)}
       />
 
-      <EventCard title="AKAD NIKAH" icon={assets.ringsIcon} top={563} delay={0.4} />
-      <EventCard title="RESEPSI" icon={assets.giftIcon} top={939} delay={0.45} />
+      <ReceptionCard />
 
       <DecorativeImage
         src={assets.bottomFoliage}
-        box={{ left: -237, top: 1061, width: 534, height: 397 }}
+        box={{ left: -237, top: 685, width: 534, height: 397 }}
         sizes="534px"
         imageStyle={{ objectPosition: "bottom" }}
         {...fadeAnim(0.6)}

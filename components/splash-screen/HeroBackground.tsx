@@ -35,13 +35,12 @@ export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
           alt="Wedding background"
           fill
           priority
-          sizes="100vw"
+          sizes="(min-width: 1024px) 393px, 100vw"
           className="object-cover object-center"
         />
         {/* Subtle vignette/gradient overlay for premium look and text readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/10 to-black/35" />
       </div>
-
 
       {/* Main Content Layout */}
       <div className="relative inset-0 z-20 flex h-full w-full flex-col items-center justify-between px-6 py-16">
@@ -66,6 +65,7 @@ export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
               src="/images/splash-screen/ring.png"
               alt="Rings ornament"
               fill
+              sizes="160px"
               className="object-contain opacity-90"
             />
           </div>
@@ -147,11 +147,11 @@ export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
               src="/images/splash-screen/button.png"
               alt="Open Invitation"
               fill
+              sizes="210px"
               className="object-contain"
-              priority
             />
             {/* Custom White Chevron to highlight active state and float gently */}
-            <div className="animate-float absolute bottom-[4px] left-1/2 -translate-x-1/2 text-white opacity-95">
+            <div className="animate-float absolute bottom-[4px] left-1/2 -translate-x-1/2 text-white opacity-95 motion-reduce:animate-none">
               <svg
                 className="h-5 w-5"
                 fill="none"

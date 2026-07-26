@@ -14,7 +14,8 @@ test("responsive story exports the Figma design dimensions", async () => {
   const story = await loadStoryModule();
 
   assert.equal(story.INVITATION_DESIGN_WIDTH, 393);
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6426);
+  assert.equal(story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION, 6050);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6568);
 });
 
 test("responsive story scales only below the Figma design width", async () => {
@@ -37,9 +38,9 @@ test("responsive story ignores invalid and nonpositive viewport widths", async (
   assert.equal(story.calculateInvitationScale(Number.NaN), 1);
 });
 
-test("responsive wrapper contains the complete seven-screen narrative", async () => {
+test("responsive wrapper contains the complete updated narrative", async () => {
   const source = await readSource("../components/invitation/InvitationStory.tsx");
-  const wrapperStart = source.indexOf("<ResponsiveStoryCanvas>");
+  const wrapperStart = source.indexOf("<ResponsiveStoryCanvas");
   const wrapperEnd = source.indexOf("</ResponsiveStoryCanvas>");
   const screens = [
     "<MainScreen",
@@ -47,6 +48,7 @@ test("responsive wrapper contains the complete seven-screen narrative", async ()
     "<CouplePhotoSection",
     "<DateEventSection",
     "<RsvpSection",
+    "<TransactionSection",
     "<GallerySection",
     "<ThankYouSection",
   ];
@@ -61,8 +63,9 @@ test("responsive wrapper contains the complete seven-screen narrative", async ()
   );
 });
 
-test("responsive wrapper derives both boxes from the exported design constants", async () => {
+test("responsive wrapper accepts the dynamic story height", async () => {
   const source = await readSource("../components/invitation/ResponsiveStoryCanvas.tsx");
+  const storySource = await readSource("../components/invitation/InvitationStory.tsx");
 
   assert.match(source, /useSyncExternalStore/);
   assert.match(
@@ -70,8 +73,10 @@ test("responsive wrapper derives both boxes from the exported design constants",
     /import\s*\{[\s\S]*INVITATION_DESIGN_WIDTH[\s\S]*INVITATION_STORY_HEIGHT[\s\S]*calculateInvitationScale[\s\S]*\}\s*from\s*"@\/lib\/invitation-story"/
   );
   assert.match(source, /width:\s*INVITATION_DESIGN_WIDTH\s*\*\s*scale/);
-  assert.match(source, /height:\s*INVITATION_STORY_HEIGHT\s*\*\s*scale/);
+  assert.match(source, /height:\s*storyHeight\s*\*\s*scale/);
   assert.match(source, /width:\s*INVITATION_DESIGN_WIDTH[,\s]/);
-  assert.match(source, /height:\s*INVITATION_STORY_HEIGHT[,\s]/);
+  assert.match(source, /height:\s*storyHeight[,\s]/);
   assert.match(source, /transformOrigin:\s*"top left"/);
+  assert.match(storySource, /getInvitationStoryHeight\(interaction\.transaction\)/);
+  assert.match(storySource, /<ResponsiveStoryCanvas storyHeight=\{storyHeight\}>/);
 });

@@ -28,24 +28,30 @@ function DecorativeImage({
   opacity,
   ...motionProps
 }: DecorativeImageProps) {
-  const positioning: CSSProperties = { position: "absolute" };
-  const styling: CSSProperties = {};
-
-  if (box) {
-    Object.entries(box).forEach(([key, value]) => {
-      if (positioningKeys.includes(key)) {
-        (positioning as any)[key] = value;
-      } else {
-        (styling as any)[key] = value;
-      }
-    });
-  }
+  const {
+    position = "absolute",
+    left,
+    right,
+    top,
+    bottom,
+    width,
+    height,
+    zIndex,
+    ...styling
+  } = box;
+  const positioning: CSSProperties = {
+    position,
+    left,
+    right,
+    top,
+    bottom,
+    width,
+    height,
+    zIndex,
+  };
 
   return (
-    <motion.div
-      style={positioning}
-      {...motionProps}
-    >
+    <motion.div style={positioning} {...motionProps}>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
@@ -65,16 +71,16 @@ function DecorativeImage({
 }
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -173,26 +179,26 @@ export default function MainScreen() {
           <span>of our marriage.</span>
         </motion.div>
 
-          <DecorativeImage
-            src={MAIN_SCREEN_ASSETS.centerFloralOrnament}
-            box={{ left: 70, top: 129, width: 78, height: 42 }}
-            imageBox={{
-              left: 0,
-              top: "-112.7%",
-              width: "100%",
-              height: "330.16%",
-            }}
-            sizes="78px"
-            figmaNode="44:40"
-            {...anim(0.6, 5)}
-          />
-          <DecorativeImage
-            src={MAIN_SCREEN_ASSETS.butterfly}
-            box={{ left: 193, top: 6, width: 32, height: 57 }}
-            sizes="32px"
-            figmaNode="45:65"
-            {...anim(0.7, 5)}
-          />
+        <DecorativeImage
+          src={MAIN_SCREEN_ASSETS.centerFloralOrnament}
+          box={{ left: 70, top: 129, width: 78, height: 42 }}
+          imageBox={{
+            left: 0,
+            top: "-112.7%",
+            width: "100%",
+            height: "330.16%",
+          }}
+          sizes="78px"
+          figmaNode="44:40"
+          {...anim(0.6, 5)}
+        />
+        <DecorativeImage
+          src={MAIN_SCREEN_ASSETS.butterfly}
+          box={{ left: 193, top: 6, width: 32, height: 57 }}
+          sizes="32px"
+          figmaNode="45:65"
+          {...anim(0.7, 5)}
+        />
       </div>
 
       <motion.div

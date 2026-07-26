@@ -7,16 +7,16 @@ import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
 const anim = (delay: number, y = 20) => ({
-  initial: { opacity: 0, y, filter: "blur(2px)" },
-  whileInView: { opacity: 1, y: 0, filter: "blur(0px)" },
-  viewport: { once: false, margin: "-60px" },
+  initial: { opacity: 0, y },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -62,7 +62,9 @@ export default function CouplePhotoSection() {
       </motion.div>
 
       <h2 className="font-qwitcher absolute top-[478px] left-1/2 -translate-x-1/2 text-center text-[62.623px] leading-[75.148px] tracking-[-1.5656px] whitespace-nowrap">
-        <motion.span className="block" {...anim(0.35, 10)}>Kinan &amp; Faiz</motion.span>
+        <motion.span className="block" {...anim(0.35, 10)}>
+          Kinan &amp; Faiz
+        </motion.span>
       </h2>
       <motion.p
         className="font-playfair absolute top-[574px] left-1/2 w-full -translate-x-1/2 text-center text-[15.729px] leading-[22.02px] tracking-[0.3932px]"
