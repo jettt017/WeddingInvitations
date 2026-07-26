@@ -41,6 +41,36 @@ interface Wish {
   created_at: string;
 }
 
+function getRelativeTime(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    
+    if (diffMs < 0) return "Baru saja";
+    
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    
+    if (diffSecs < 60) {
+      return "Baru saja";
+    } else if (diffMins < 60) {
+      return `${diffMins} menit yang lalu`;
+    } else if (diffHours < 24) {
+      return `${diffHours} jam yang lalu`;
+    } else if (diffDays < 7) {
+      return `${diffDays} hari yang lalu`;
+    } else {
+      return `${diffWeeks} minggu yang lalu`;
+    }
+  } catch (e) {
+    return "";
+  }
+}
+
 function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "intro" | "form" | "success" }) {
   const assets = STORY_ASSETS.rsvp;
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -176,27 +206,38 @@ function RsvpIntro({ onOpen, rsvpState }: { onOpen: () => void; rsvpState?: "int
           </h3>
           <div className="w-16 h-[0.5px] bg-[#7C5649]/40 mx-auto mt-1 mb-4" />
           
-          <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-2 pb-6 space-y-3.5">
-            {loading ? (
-              <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Loading wishes...</p>
-            ) : wishes.length === 0 ? (
-              <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Be the first to leave a wish!</p>
-            ) : (
-              wishes.map((w, index) => (
-                <motion.div
-                  key={w.id || index}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
-                  className="bg-[#D6C8B6]/30 border border-[#7C5649]/10 rounded-[12px] p-3 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)]"
-                >
-                  <p className="font-playfair text-[13px] font-bold text-[#453F2F]">{w.name}</p>
-                  <p className="font-literata text-[12px] leading-[17px] text-[#62483E] mt-1.5 whitespace-pre-line italic">
-                    "{w.wishes}"
-                  </p>
-                </motion.div>
-              ))
-            )}
+          <div className="relative flex-1 min-h-0">
+            <div className="h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden px-2 pb-10 space-y-3.5">
+              {loading ? (
+                <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Loading wishes...</p>
+              ) : wishes.length === 0 ? (
+                <p className="font-literata text-center text-xs text-[#7C5649]/60 italic mt-8">Be the first to leave a wish!</p>
+              ) : (
+                wishes.map((w, index) => (
+                  <motion.div
+                    key={w.id || index}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
+                    className="border-b border-[#7C5649]/15 pb-3.5 pt-1.5 last:border-b-0"
+                  >
+                    <div className="flex justify-between items-baseline gap-2">
+                      <p className="font-playfair text-[13px] font-bold text-[#453F2F] tracking-wide">{w.name}</p>
+                      {w.created_at && (
+                        <span className="font-sans text-[9px] tracking-wider text-[#7C5649]/55 font-medium shrink-0">
+                          {getRelativeTime(w.created_at)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-literata text-[12px] leading-[17px] text-[#62483E] mt-1.5 whitespace-pre-line italic">
+                      "{w.wishes}"
+                    </p>
+                  </motion.div>
+                ))
+              )}
+            </div>
+            {/* Smooth Fade Mask at the bottom scroll boundary */}
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#FAEBE0] to-transparent pointer-events-none z-10" />
           </div>
         </div>
       </div>
