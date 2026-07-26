@@ -59,18 +59,6 @@ function getServerGuestName(): string {
   return resolveGuestName("");
 }
 
-function subscribeToViewport(onStoreChange: () => void): () => void {
-  window.addEventListener("resize", onStoreChange);
-  return () => window.removeEventListener("resize", onStoreChange);
-}
-
-function getViewportWidth(): number {
-  return window.innerWidth;
-}
-
-function getServerViewportWidth(): number {
-  return INVITATION_DESIGN_WIDTH;
-}
 
 export default function InvitationExperience() {
   const [view, dispatch] = useReducer(invitationViewReducer, "splash");
