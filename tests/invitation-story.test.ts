@@ -252,7 +252,7 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   assert.ok(photos.every((photo) => photo.alt.trim().length > 0));
   assert.ok(
     photos.every((photo) =>
-      photo.fallbacks.every((fallback: any) => {
+      photo.fallbacks.every((fallback) => {
         const objectPosition =
           "objectPosition" in fallback
             ? fallback.objectPosition
@@ -274,15 +274,15 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,
-    /gallery\/gallery-feature-01-7a15de79\.webp$/
+    /gallery\/gallery-feature-01-crop-[a-f0-9]{8}\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature02.fallbacks[0].src,
-    /gallery\/gallery-feature-02-2933126a\.webp$/
+    /gallery\/gallery-feature-02-crop-[a-f0-9]{8}\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature03.fallbacks[0].src,
-    /gallery\/gallery-feature-03-76885071\.webp$/
+    /gallery\/gallery-feature-03-crop-[a-f0-9]{8}\.webp$/
   );
   assert.ok(
     [
@@ -292,7 +292,9 @@ test("photo slots record meaningful local fallbacks and their final replacement 
     ].every(
       (photo) =>
         photo.fallbacks[0].objectPosition === "50% 50%" &&
-        photo.fallbacks[0].sizes === "183px" &&
+        photo.fallbacks[0].sizes === "182px" &&
+        photo.fallbacks[0].width === 182 &&
+        [175, 190].includes(photo.fallbacks[0].height) &&
         !("crop" in photo.fallbacks[0])
     )
   );
