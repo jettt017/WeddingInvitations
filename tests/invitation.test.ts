@@ -115,7 +115,7 @@ test("main screen scroll region is keyboard accessible", async () => {
   assert.match(mainRegion, /role="region"/);
   assert.match(mainRegion, /aria-labelledby="main-screen-title"/);
   assert.match(mainRegion, /tabIndex=\{0\}/);
-  assert.match(mainRegion, /data-lenis-prevent=""/);
+  assert.doesNotMatch(mainRegion, /data-lenis-prevent/);
   assert.match(mainRegion, /focus-visible:ring-2/);
   assert.match(mainRegion, /focus-visible:ring-inset/);
   assert.equal(
