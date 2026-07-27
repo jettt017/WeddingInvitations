@@ -43,14 +43,14 @@ const transition = { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const };
 const anim = (delay: number, y = 20) => ({
   initial: { opacity: 0, y },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -86,7 +86,7 @@ function getRelativeTime(dateString: string): string {
     } else {
       return `${diffWeeks} minggu yang lalu`;
     }
-  } catch (e) {
+  } catch {
     return "";
   }
 }
