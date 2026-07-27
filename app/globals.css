@@ -89,28 +89,6 @@
   --secondary: #1e352f;
 }
 
-/* Lenis smooth scrolling compatibility */
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  scroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
-}
-
 /* Custom premium layouts and styling */
 body {
   background-color: var(--background);

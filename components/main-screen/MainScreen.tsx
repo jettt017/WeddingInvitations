@@ -16,8 +16,6 @@ interface DecorativeImageProps extends MotionProps {
   opacity?: number;
 }
 
-const positioningKeys = ["position", "left", "right", "top", "bottom", "width", "height", "zIndex"];
-
 function DecorativeImage({
   src,
   box,
@@ -73,14 +71,14 @@ function DecorativeImage({
 const anim = (delay: number, y = 20) => ({
   initial: { opacity: 0, y },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 

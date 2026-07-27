@@ -303,7 +303,6 @@ export default function InvitationExperience() {
               aria-hidden={shouldHideStory || undefined}
               inert={shouldHideStory || undefined}
               tabIndex={0}
-              data-lenis-prevent=""
               className="focus-visible:ring-brand-gold-dark absolute inset-0 [scrollbar-width:none] overflow-x-hidden overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-scrollbar]:hidden"
               initial={{
                 opacity: 0,
