@@ -12,14 +12,14 @@ import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 const anim = (delay: number, y = 20) => ({
   initial: { opacity: 0, y },
   whileInView: { opacity: 1, y: 0 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
 const fadeAnim = (delay: number) => ({
   initial: { opacity: 0, scale: 1.01 },
   whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false, margin: "-60px" },
+  viewport: { once: true, margin: "-60px" },
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
@@ -100,23 +100,19 @@ function Polaroid({
 
   return (
     <motion.div
-      className="absolute bg-[#D9D9D9] shadow-sm"
+      className="absolute h-[222.852px] w-[199.413px] bg-[#D9D9D9] shadow-sm"
       style={{
         left,
         top,
         rotate,
-        width: "199.413px",
-        height: "222.852px",
       }}
       {...anim(delay, 25)}
     >
       <div
-        className="absolute overflow-hidden"
+        className="absolute h-[174.698px] w-[182.537px] overflow-hidden"
         style={{
           top: "9.37px",
           left: "8.04px",
-          width: "182.537px",
-          height: "174.698px",
         }}
       >
         <Image

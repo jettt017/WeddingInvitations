@@ -252,13 +252,8 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   assert.ok(photos.every((photo) => photo.alt.trim().length > 0));
   assert.ok(
     photos.every((photo) =>
-      photo.fallbacks.every((fallback: any) => {
-        const objectPosition =
-          "objectPosition" in fallback
-            ? fallback.objectPosition
-            : "crop" in fallback
-              ? fallback.crop.objectPosition
-              : "";
+      photo.fallbacks.every((fallback) => {
+        const objectPosition = fallback.objectPosition;
 
         return (
           fallback.src.startsWith("/images/") &&

@@ -1,62 +1,64 @@
 import type { Metadata } from "next";
-import {
-  Cormorant_Garamond,
-  Montserrat,
-  Literata,
-  Prata,
-  Qwigley,
-  Playfair_Display,
-  Qwitcher_Grypen,
-} from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
+const cormorant = localFont({
+  src: "./fonts/cormorant-garamond-latin.woff2",
   display: "swap",
   variable: "--font-serif-cormorant",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: "300 700",
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
+const montserrat = localFont({
+  src: "./fonts/montserrat-latin.woff2",
   display: "swap",
   variable: "--font-sans-montserrat",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: "300 700",
 });
 
-const literata = Literata({
-  subsets: ["latin"],
+const literata = localFont({
+  src: "./fonts/literata-latin.woff2",
   display: "swap",
   variable: "--font-literata",
-  weight: ["300", "400", "500", "600", "700"],
+  weight: "300 700",
 });
 
-const prata = Prata({
-  subsets: ["latin"],
+const prata = localFont({
+  src: "./fonts/prata-latin.woff2",
   display: "swap",
   variable: "--font-prata",
   weight: "400",
 });
 
-const qwigley = Qwigley({
-  subsets: ["latin"],
+const qwigley = localFont({
+  src: "./fonts/qwigley-latin.woff2",
   display: "swap",
   variable: "--font-qwigley",
-  weight: ["400"],
+  weight: "400",
 });
 
-const playfairDisplay = Playfair_Display({
-  subsets: ["latin"],
+const playfairDisplay = localFont({
+  src: "./fonts/playfair-display-latin.woff2",
   display: "swap",
   variable: "--font-playfair",
-  weight: ["400", "500", "600", "700"],
+  weight: "400 700",
 });
 
-const qwitcherGrypen = Qwitcher_Grypen({
-  subsets: ["latin"],
+const qwitcherGrypen = localFont({
+  src: [
+    {
+      path: "./fonts/qwitcher-grypen-latin-400.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/qwitcher-grypen-latin-700.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   display: "swap",
   variable: "--font-qwitcher",
-  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {

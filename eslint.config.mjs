@@ -9,12 +9,7 @@ const eslintConfig = defineConfig([
   // Integrate Prettier configurations to prevent formatting conflicts
   eslintConfigPrettier,
   // Override default ignores of eslint-config-next.
-  globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
+  globalIgnores([".next/**", ".next-build-check/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
 export default eslintConfig;
