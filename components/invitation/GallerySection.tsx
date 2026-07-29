@@ -108,24 +108,15 @@ function Polaroid({
       }}
       {...anim(delay, 25)}
     >
-      <div
-        className="absolute h-[174.698px] w-[182.537px] overflow-hidden"
-        style={{
-          top: "9.37px",
-          left: "8.04px",
-        }}
-      >
-        <Image
-          src={fallback.src}
-          alt={photo.alt}
-          fill
-          sizes={fallback.sizes}
-          style={{
-            objectFit: "cover",
-            objectPosition: fallback.objectPosition,
-          }}
-        />
-      </div>
+      <Image
+        src={fallback.src}
+        alt={photo.alt}
+        width={fallback.width}
+        height={fallback.height}
+        sizes={fallback.sizes}
+        className="absolute top-[9.37px] left-[8.04px] object-cover"
+        style={{ objectPosition: fallback.objectPosition }}
+      />{" "}
     </motion.div>
   );
 }

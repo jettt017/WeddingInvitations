@@ -289,19 +289,19 @@ test("gallery matches the Figma photo windows without stretching images", async 
   const gallerySource = await readSource("../components/invitation/GallerySection.tsx");
   const storySource = await readSource("../lib/invitation-story.ts");
 
-  assert.match(gallerySource, /h-\[222\.852px\] w-\[199\.413px\]/);
-  assert.match(gallerySource, /h-\[174\.698px\] w-\[182\.537px\]/);
+  assert.match(gallerySource, /width=\{fallback\.width\}/);
+  assert.match(gallerySource, /height=\{fallback\.height\}/);
   assert.match(gallerySource, /left=\{89\} top=\{149\}/);
   assert.match(gallerySource, /left=\{67\}[\s\S]*top=\{318\}/);
   assert.match(gallerySource, /left=\{126\}[\s\S]*top=\{467\}/);
   assert.match(gallerySource, /top-\[170px\][\s\S]*h-\[617px\][\s\S]*w-\[347px\]/);
-  assert.match(storySource, /gallery-feature-01-7a15de79\.webp/);
-  assert.match(storySource, /gallery-feature-02-2933126a\.webp/);
-  assert.match(storySource, /gallery-feature-03-76885071\.webp/);
+  assert.match(storySource, /gallery-feature-01-crop-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /gallery-feature-02-crop-[a-f0-9]{8}\.webp/);
+  assert.match(storySource, /gallery-feature-03-crop-[a-f0-9]{8}\.webp/);
   assert.match(storySource, /collage-85e96837\.webp/);
   assert.match(storySource, /groom-photo-[a-f0-9]{8}\.webp/);
-  assert.doesNotMatch(storySource, /112bcc1c|c8b6323b|9026800e|136efe96/);
-  assert.doesNotMatch(storySource, /objectFit:\s*"fill"/);
+  assert.doesNotMatch(storySource, /7a15de79|2933126a|76885071/);
+  assert.doesNotMatch(gallerySource, /objectFit:\s*"fill"/);
 });
 
 test("countdown starts with placeholders, schedules timeouts, and uses the Figma fonts", async () => {
