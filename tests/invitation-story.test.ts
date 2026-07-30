@@ -264,7 +264,11 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   );
   assert.deepEqual(
     story.STORY_PHOTOS.coupleCover.fallbacks.map((fallback) => fallback.objectPosition),
-    ["50% 63%", "50% 52%"]
+    ["50% 50%"]
+  );
+  assert.match(
+    story.STORY_PHOTOS.coupleCover.fallbacks[0].src,
+    /couple-photo\/couple-cover\.webp$/
   );
   assert.match(
     story.STORY_PHOTOS.galleryFeature01.fallbacks[0].src,

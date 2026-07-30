@@ -37,7 +37,7 @@ export default function CouplePhotoSection() {
               src={fallback.src}
               alt=""
               fill
-              sizes="197px"
+              sizes="393px"
               className="object-cover"
               style={{ objectPosition: fallback.objectPosition }}
             />

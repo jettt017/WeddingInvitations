@@ -45,6 +45,7 @@ export const STORY_ASSETS = {
     leafDivider: storyAsset("groom-bride/leaf-divider.webp"),
   },
   couplePhoto: {
+    coupleCover: storyAsset("couple-photo/couple-cover.webp"),
     bottomLandscape: storyAsset("couple-photo/bottom-landscape.webp"),
     centerFlowers: storyAsset("couple-photo/center-flowers.webp"),
     botanicalFrame: storyAsset("couple-photo/botanical-frame.webp"),
@@ -119,12 +120,8 @@ export const STORY_PHOTOS = {
     alt: "Kinan and Faiz posing outdoors",
     fallbacks: [
       {
-        src: STORY_ASSETS.groomBride.groomPhoto,
-        objectPosition: "50% 63%",
-      },
-      {
-        src: STORY_ASSETS.groomBride.bridePhoto,
-        objectPosition: "50% 52%",
+        src: STORY_ASSETS.couplePhoto.coupleCover,
+        objectPosition: "50% 50%",
       },
     ],
   },
