@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS } from "@/lib/invitation-story";
 
@@ -121,8 +120,6 @@ export default function ThankYouSection() {
           sizes="810px"
           {...fadeAnim(0.45)}
         />
-
-        <MusicButton className="top-5 left-5" />
       </div>
     </StorySection>
   );

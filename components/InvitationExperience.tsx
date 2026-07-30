@@ -10,8 +10,14 @@ import {
   useSyncExternalStore,
 } from "react";
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
+import { X } from "lucide-react";
 
 import InvitationStory from "@/components/invitation/InvitationStory";
+import MusicButton, {
+  MusicProvider,
+  roundControlButtonClassName,
+  useWeddingMusic,
+} from "@/components/invitation/MusicButton";
 import { RsvpForm } from "@/components/invitation/RsvpSection";
 import HeroBackground from "@/components/splash-screen/HeroBackground";
 import { invitationViewReducer, isPersonalizedGuestName, resolveGuestName } from "@/lib/invitation";
@@ -59,14 +65,14 @@ function getServerGuestName(): string {
   return resolveGuestName("");
 }
 
-
-export default function InvitationExperience() {
+function InvitationExperienceContent() {
   const [view, dispatch] = useReducer(invitationViewReducer, "splash");
   const [interaction, dispatchInteraction] = useReducer(
     storyInteractionReducer,
     INITIAL_STORY_INTERACTION
   );
   const shouldReduceMotion = useReducedMotion();
+  const { play: playWeddingMusic } = useWeddingMusic();
   const [isRsvpDialogExiting, setIsRsvpDialogExiting] = useState(false);
   const rsvpTriggerRef = useRef<HTMLButtonElement>(null);
   const transactionRevealRef = useRef<HTMLButtonElement>(null);
@@ -149,6 +155,10 @@ export default function InvitationExperience() {
     };
   }, [guestName, isPersonalizedGuest]);
 
+  const handleInvitationOpen = useCallback(() => {
+    playWeddingMusic();
+    dispatch({ type: "open" });
+  }, [playWeddingMusic]);
   const handleRsvpOpen = useCallback(() => {
     if (restorePersistedAccess() === "locked") {
       isRsvpDialogClosingRef.current = false;
@@ -275,7 +285,6 @@ export default function InvitationExperience() {
     setIsRsvpDialogExiting(false);
   }, []);
 
-
   return (
     <MotionConfig reducedMotion="user">
       <div className="relative h-dvh w-full overflow-hidden lg:h-full">
@@ -293,7 +302,7 @@ export default function InvitationExperience() {
                 ease: transitionEase,
               }}
             >
-              <HeroBackground onOpen={() => dispatch({ type: "open" })} />
+              <HeroBackground onOpen={handleInvitationOpen} />
             </motion.div>
           ) : (
             <motion.div
@@ -326,6 +335,8 @@ export default function InvitationExperience() {
           )}
         </AnimatePresence>
 
+        {view === "main" ? <MusicButton className="fixed top-5 left-5 z-[70]" /> : null}
+
         {/* Fullscreen scaled RSVP Form Overlay */}
         <AnimatePresence onExitComplete={handleRsvpExitComplete}>
           {isRsvpOverlayOpen && (
@@ -354,8 +365,16 @@ export default function InvitationExperience() {
                 duration: shouldReduceMotion ? 0 : 0.75,
                 ease: transitionEase,
               }}
-              className="absolute inset-0 z-50 flex items-center justify-center bg-[#FAEBE0]"
+              className="absolute inset-0 z-50 flex [scrollbar-width:none] items-start justify-center overflow-y-auto bg-[#FAEBE0] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
+              <button
+                type="button"
+                onClick={handleRsvpClose}
+                aria-label="Close RSVP"
+                className={`${roundControlButtonClassName} fixed top-5 right-5 z-[70] hover:scale-105`}
+              >
+                <X aria-hidden="true" size={18} strokeWidth={2.4} />
+              </button>
               <div
                 className="relative shrink-0 overflow-hidden"
                 style={{
@@ -386,5 +405,13 @@ export default function InvitationExperience() {
         </AnimatePresence>
       </div>
     </MotionConfig>
+  );
+}
+
+export default function InvitationExperience() {
+  return (
+    <MusicProvider>
+      <InvitationExperienceContent />
+    </MusicProvider>
   );
 }

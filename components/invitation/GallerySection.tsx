@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { X } from "lucide-react";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
+import { roundControlButtonClassName } from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
@@ -116,7 +117,7 @@ function Polaroid({
         sizes={fallback.sizes}
         className="absolute top-[9.37px] left-[8.04px] object-cover"
         style={{ objectPosition: fallback.objectPosition }}
-      />{" "}
+      />
     </motion.div>
   );
 }
@@ -139,7 +140,6 @@ function GalleryPreview({
     <StorySection figmaNode="115:135" section="gallery-preview">
       <div data-figma-node="115:135" className="absolute inset-0">
         <GalleryBackdrop isPreview />
-        <MusicButton className="top-5 left-5" />
 
         <Polaroid photo={STORY_PHOTOS.galleryFeature01} left={89} top={149} delay={0.25} />
         <Polaroid
@@ -188,12 +188,11 @@ function GalleryExpanded({ onClose }: { onClose: () => void }) {
           ref={backButtonRef}
           type="button"
           onClick={onClose}
-          aria-label="Back to gallery preview"
-          className="absolute top-5 left-5 z-30 size-[34px] rounded-full"
+          aria-label="Close gallery"
+          className={`${roundControlButtonClassName} absolute top-5 right-5 z-30 hover:scale-105`}
         >
-          <Image src={assets.backIcon} alt="" fill sizes="34px" />
+          <X aria-hidden="true" size={18} strokeWidth={2.4} />
         </button>
-        <MusicButton className="top-5 left-[353px]" />
         <div className="absolute top-[170px] left-[23px] h-[617px] w-[347px] overflow-hidden">
           <Image
             src={assets.collage}

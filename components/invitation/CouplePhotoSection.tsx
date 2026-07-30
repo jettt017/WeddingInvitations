@@ -2,7 +2,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS, STORY_PHOTOS } from "@/lib/invitation-story";
 
@@ -117,8 +116,6 @@ export default function CouplePhotoSection() {
         sizes="522px"
         {...fadeAnim(0.5)}
       />
-
-      <MusicButton className="top-5 left-5" />
     </StorySection>
   );
 }

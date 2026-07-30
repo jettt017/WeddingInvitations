@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import {
   buildGoogleCalendarUrl,
@@ -133,7 +132,6 @@ export default function DateEventSection() {
         imageStyle={{ objectPosition: "bottom" }}
         {...fadeAnim(0.1)}
       />
-      <MusicButton className="top-5 left-5" />
 
       <motion.h2
         className="font-playfair absolute top-[48px] left-[78px] text-[30.699px] leading-[44.207px] tracking-[0.934px]"

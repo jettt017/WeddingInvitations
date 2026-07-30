@@ -13,7 +13,6 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
 import RsvpCelebration from "@/components/invitation/RsvpCelebration";
 import StorySection from "@/components/invitation/StorySection";
 import { isPersonalizedGuestName } from "@/lib/invitation";
@@ -66,15 +65,15 @@ function getRelativeTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    
+
     if (diffMs < 0) return "Baru saja";
-    
+
     const diffSecs = Math.floor(diffMs / 1000);
     const diffMins = Math.floor(diffSecs / 60);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
     const diffWeeks = Math.floor(diffDays / 7);
-    
+
     if (diffSecs < 60) {
       return "Baru saja";
     } else if (diffMins < 60) {
@@ -177,7 +176,6 @@ function RsvpIntro({
           sizes="1136px"
           {...fadeAnim(0.15)}
         />
-        <MusicButton className="top-5 left-5" />
 
         <motion.h2
           className="font-playfair absolute top-[94px] left-1/2 -translate-x-1/2 text-[45.052px] leading-[64.876px] tracking-[1.3707px]"
@@ -258,7 +256,7 @@ function RsvpIntro({
           </h3>
           <div className="mx-auto mt-1 mb-4 h-[0.5px] w-16 bg-[#7C5649]/40" />
 
-          <div className="relative flex-1 min-h-0">
+          <div className="relative min-h-0 flex-1">
             <div className="h-full [scrollbar-width:none] space-y-3.5 overflow-y-auto px-2 pb-10 [&::-webkit-scrollbar]:hidden">
               {loading ? (
                 <p className="font-literata mt-8 text-center text-xs text-[#7C5649]/60 italic">
@@ -275,12 +273,14 @@ function RsvpIntro({
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
-                    className="border-b border-[#7C5649]/15 pb-3.5 pt-1.5 last:border-b-0"
+                    className="border-b border-[#7C5649]/15 pt-1.5 pb-3.5 last:border-b-0"
                   >
-                    <div className="flex justify-between items-baseline gap-2">
-                      <p className="font-playfair text-[13px] font-bold text-[#453F2F] tracking-wide">{w.name}</p>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="font-playfair text-[13px] font-bold tracking-wide text-[#453F2F]">
+                        {w.name}
+                      </p>
                       {w.created_at && (
-                        <span className="font-sans text-[9px] tracking-wider text-[#7C5649]/55 font-medium shrink-0">
+                        <span className="shrink-0 font-sans text-[9px] font-medium tracking-wider text-[#7C5649]/55">
                           {getRelativeTime(w.created_at)}
                         </span>
                       )}
@@ -293,7 +293,7 @@ function RsvpIntro({
               )}
             </div>
             {/* Smooth Fade Mask at the bottom scroll boundary */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#FAEBE0] to-transparent pointer-events-none z-10" />
+            <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-12 bg-gradient-to-t from-[#FAEBE0] to-transparent" />
           </div>
         </div>
       </div>
@@ -598,28 +598,6 @@ export function RsvpForm({
         </motion.div>
 
         <div inert={isSubmitting || undefined} className="absolute inset-0">
-          {/* Buttons slide/fade in */}
-          <motion.button
-            type="button"
-            disabled={isSubmitting}
-            onClick={handleClose}
-            aria-label="Back to invitation"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-5 left-5 z-30 size-[34px] rounded-full transition-transform hover:scale-105 active:scale-95"
-          >
-            <Image src={STORY_ASSETS.gallery.backIcon} alt="" fill sizes="34px" />
-          </motion.button>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-5 left-[353px] z-30"
-          >
-            <MusicButton />
-          </motion.div>
-
           {mode === "success" ? (
             <RsvpSuccess />
           ) : (

@@ -2,7 +2,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import DecorativeImage from "@/components/invitation/DecorativeImage";
-import MusicButton from "@/components/invitation/MusicButton";
 import StorySection from "@/components/invitation/StorySection";
 import { STORY_ASSETS } from "@/lib/invitation-story";
 
@@ -100,8 +99,6 @@ export default function GroomBrideSection() {
         imageStyle={{ objectFit: "cover" }}
         {...fadeAnim(0.15)}
       />
-
-      <MusicButton className="top-5 left-5" />
 
       {/* Groom info block */}
       <motion.p
