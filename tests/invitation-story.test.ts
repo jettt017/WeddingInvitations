@@ -14,7 +14,8 @@ test("wedding event is scheduled for 16 August 2026 in Jakarta time", async () =
   if (!("WEDDING_EVENT" in story)) return;
 
   assert.equal(story.WEDDING_EVENT.dateLabel, "August, 16th 2026");
-  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T08:00:00+07:00");
+  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T10:00:00+07:00");
+  assert.equal(story.WEDDING_EVENT.timeLabel, "10.00 WIB");
   assert.equal(story.WEDDING_EVENT.venue, "Surabaya Suites Hotel");
   assert.equal(
     story.WEDDING_EVENT.location,
@@ -31,17 +32,17 @@ test("countdown separates remaining time into days hours minutes and seconds", a
   if (!("calculateCountdown" in story)) return;
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-15T00:00:00+07:00")),
-    { days: 1, hours: 8, minutes: 0, seconds: 0 }
+    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-15T00:00:00+07:00")),
+    { days: 1, hours: 10, minutes: 0, seconds: 0 }
   );
 });
 
 test("countdown uses the exact UTC instants for the wedding event", async () => {
   const story = await loadStoryModule();
 
-  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T08:00:00+07:00");
+  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T10:00:00+07:00");
   assert.equal(story.WEDDING_EVENT.end, "2026-08-16T12:00:00+07:00");
-  assert.equal(new Date(story.WEDDING_EVENT.start).toISOString(), "2026-08-16T01:00:00.000Z");
+  assert.equal(new Date(story.WEDDING_EVENT.start).toISOString(), "2026-08-16T03:00:00.000Z");
   assert.equal(new Date(story.WEDDING_EVENT.end).toISOString(), "2026-08-16T05:00:00.000Z");
 });
 
@@ -49,7 +50,7 @@ test("countdown rounds positive partial seconds up", async () => {
   const story = await loadStoryModule();
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-16T00:59:59.999Z")),
+    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-16T02:59:59.999Z")),
     { days: 0, hours: 0, minutes: 0, seconds: 1 }
   );
 });
@@ -58,7 +59,7 @@ test("countdown returns zero at the exact event start", async () => {
   const story = await loadStoryModule();
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-16T01:00:00.000Z")),
+    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-16T03:00:00.000Z")),
     { days: 0, hours: 0, minutes: 0, seconds: 0 }
   );
 });
@@ -70,7 +71,7 @@ test("countdown stops at zero after the event starts", async () => {
   if (!("calculateCountdown" in story)) return;
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("2026-08-17T00:00:00+07:00")),
+    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-17T00:00:00+07:00")),
     { days: 0, hours: 0, minutes: 0, seconds: 0 }
   );
 });
@@ -84,7 +85,7 @@ test("countdown never exposes NaN for invalid dates", async () => {
     minutes: 0,
     seconds: 0,
   });
-  assert.deepEqual(story.calculateCountdown("2026-08-16T08:00:00+07:00", new Date("not-a-date")), {
+  assert.deepEqual(story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("not-a-date")), {
     days: 0,
     hours: 0,
     minutes: 0,
@@ -104,7 +105,7 @@ test("calendar link contains the configured couple date and venue", async () => 
   assert.equal(url.origin + url.pathname, "https://calendar.google.com/calendar/render");
   assert.equal(url.searchParams.get("action"), "TEMPLATE");
   assert.match(url.searchParams.get("text") ?? "", /Kinan.*Faiz/i);
-  assert.match(url.searchParams.get("dates") ?? "", /^20260816T010000Z\//);
+  assert.match(url.searchParams.get("dates") ?? "", /^20260816T030000Z\//);
   assert.match(url.searchParams.get("location") ?? "", /Surabaya Suites Hotel/i);
   assert.match(url.searchParams.get("location") ?? "", /Surabaya 60271/i);
 });
@@ -119,30 +120,18 @@ test("RSVP integration is disabled when Supabase values are missing", async () =
   assert.equal(story.hasSupabaseConfig("https://example.supabase.co", "anon-key"), true);
 });
 
-test("RSVP validation requires a response and guest name", async () => {
+test("RSVP validation only accepts a guest count within the invitation allowance", async () => {
   const story = await loadStoryModule();
 
   assert.equal(typeof story.validateRsvp, "function");
   if (!("validateRsvp" in story)) return;
 
-  assert.deepEqual(story.validateRsvp({ attendance: "", name: "", guests: 1 }), {
-    attendance: "Please select your response.",
-    name: "Please enter the guest name.",
+  assert.deepEqual(story.validateRsvp({ guests: 1, maxGuests: 2 }), {});
+  assert.deepEqual(story.validateRsvp({ guests: 0, maxGuests: 2 }), {
+    guests: "Please enter between 1 and 2 guests.",
   });
-  assert.deepEqual(
-    story.validateRsvp({ attendance: "attending", name: "  Rina & Fajar  ", guests: 2 }),
-    {}
-  );
-});
-
-test("RSVP validation limits the guest count to one through ten", async () => {
-  const story = await loadStoryModule();
-
-  assert.deepEqual(story.validateRsvp({ attendance: "attending", name: "Rina", guests: 0 }), {
-    guests: "Please enter between 1 and 10 guests.",
-  });
-  assert.deepEqual(story.validateRsvp({ attendance: "attending", name: "Rina", guests: 11 }), {
-    guests: "Please enter between 1 and 10 guests.",
+  assert.deepEqual(story.validateRsvp({ guests: 3, maxGuests: 2 }), {
+    guests: "Please enter between 1 and 2 guests.",
   });
 });
 
@@ -164,55 +153,42 @@ test("gallery interaction opens and closes the expanded design", async () => {
   );
 });
 
-test("RSVP completion unlocks and preserves transaction access", async () => {
+test("transaction is available before RSVP and toggles reveal state", async () => {
   const story = await loadStoryModule();
 
   assert.equal(typeof story.storyInteractionReducer, "function");
   assert.equal(typeof story.INITIAL_STORY_INTERACTION, "object");
   if (!("storyInteractionReducer" in story) || !("INITIAL_STORY_INTERACTION" in story)) return;
 
-  assert.equal(story.INITIAL_STORY_INTERACTION.transaction, "locked");
+  assert.equal(story.INITIAL_STORY_INTERACTION.transaction, "ready");
 
-  const ignoredReveal = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
-    type: "reveal_transaction",
+  const revealed = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
+    type: "toggle_transaction",
   });
   const form = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
     type: "open_rsvp",
   });
   const success = story.storyInteractionReducer(form, { type: "rsvp_submitted" });
   const closed = story.storyInteractionReducer(success, { type: "close_rsvp" });
-  const revealed = story.storyInteractionReducer(closed, { type: "reveal_transaction" });
-  const repeated = story.storyInteractionReducer(revealed, { type: "rsvp_submitted" });
-  const restored = story.storyInteractionReducer(story.INITIAL_STORY_INTERACTION, {
-    type: "restore_invitation_access",
-    transaction: "revealed",
-  });
-  const restoredWhileOpen = story.storyInteractionReducer(form, {
-    type: "restore_invitation_access",
-    transaction: "ready",
+  const hiddenAgain = story.storyInteractionReducer(revealed, {
+    type: "toggle_transaction",
   });
 
-  assert.equal(ignoredReveal.transaction, "locked");
+  assert.equal(revealed.transaction, "revealed");
+  assert.equal(hiddenAgain.transaction, "ready");
   assert.equal(form.rsvp, "form");
   assert.equal(success.rsvp, "success");
   assert.equal(success.transaction, "ready");
   assert.equal(closed.rsvp, "intro");
   assert.equal(closed.transaction, "ready");
-  assert.equal(revealed.transaction, "revealed");
-  assert.equal(repeated.transaction, "revealed");
-  assert.equal(restored.transaction, "revealed");
-  assert.equal(restoredWhileOpen.rsvp, "intro");
-  assert.equal(restoredWhileOpen.transaction, "ready");
 });
 
-test("transaction visibility controls the responsive story height", async () => {
+test("story height always reserves transaction and wishes sections", async () => {
   const story = await loadStoryModule();
 
-  assert.equal(story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION, 6_050);
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6_568);
-  assert.equal(story.getInvitationStoryHeight("locked"), 6_050);
-  assert.equal(story.getInvitationStoryHeight("ready"), 6_568);
-  assert.equal(story.getInvitationStoryHeight("revealed"), 6_568);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 7_420);
+  assert.equal(story.getInvitationStoryHeight("ready"), 7_420);
+  assert.equal(story.getInvitationStoryHeight("revealed"), 7_420);
 });
 
 test("story assets are committed local files rather than temporary Figma URLs", async () => {
@@ -299,14 +275,10 @@ test("photo slots record meaningful local fallbacks and their final replacement 
   assert.match(story.STORY_ASSETS.gallery.collage, /gallery\/collage-85e96837\.webp$/);
 });
 
-test("updated story height includes the 518 pixel transaction section", async () => {
+test("updated story height includes the transaction and separate wishes sections", async () => {
   const story = await loadStoryModule();
 
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6_568);
-  assert.equal(
-    story.INVITATION_STORY_HEIGHT - story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION,
-    518
-  );
+  assert.equal(story.INVITATION_STORY_HEIGHT, 6_050 + 518 + 852);
 });
 
 test("new gallery and transaction assets stay lightweight", async () => {

@@ -30,7 +30,7 @@ class MemoryStorage implements StorageLike {
 }
 
 async function loadPersistenceModule() {
-  return import("../lib/rsvp-persistence.ts").catch(() => null);
+  return import("../lib/rsvp-submission-lock.ts").catch(() => null);
 }
 
 test("transaction accounts are assembled only from complete server environment values", async () => {
@@ -59,73 +59,6 @@ test("transaction accounts are assembled only from complete server environment v
     }),
     null
   );
-});
-
-test("successful RSVP access survives refresh without storing guest data", async () => {
-  const persistence = await loadPersistenceModule();
-
-  assert.ok(persistence, "expected the RSVP persistence module to exist");
-  if (!persistence) return;
-
-  const storage = new MemoryStorage();
-
-  assert.equal(persistence.loadPersistedInvitationAccess(storage), "locked");
-
-  persistence.persistInvitationAccess(storage, "ready");
-  assert.equal(persistence.loadPersistedInvitationAccess(storage), "ready");
-
-  persistence.persistInvitationAccess(storage, "revealed");
-  assert.equal(persistence.loadPersistedInvitationAccess(storage), "revealed");
-
-  const serialized = storage.getItem(persistence.RSVP_ACCESS_STORAGE_KEY);
-  assert.ok(serialized);
-  assert.doesNotMatch(serialized, /name|guest|wishes|attendance/i);
-});
-
-test("invalid or unavailable browser storage keeps transaction access locked", async () => {
-  const persistence = await loadPersistenceModule();
-
-  assert.ok(persistence, "expected the RSVP persistence module to exist");
-  if (!persistence) return;
-
-  const invalid = new MemoryStorage();
-  invalid.setItem(persistence.RSVP_ACCESS_STORAGE_KEY, "{not-json");
-
-  const unavailable: StorageLike = {
-    getItem() {
-      throw new Error("storage unavailable");
-    },
-    setItem() {
-      throw new Error("storage unavailable");
-    },
-    removeItem() {
-      throw new Error("storage unavailable");
-    },
-  };
-
-  assert.equal(persistence.loadPersistedInvitationAccess(invalid), "locked");
-  assert.equal(persistence.loadPersistedInvitationAccess(unavailable), "locked");
-  assert.doesNotThrow(() => persistence.persistInvitationAccess(unavailable, "ready"));
-});
-
-test("browser storage property failures never block in-session RSVP completion", async () => {
-  const persistence = await loadPersistenceModule();
-
-  assert.ok(persistence, "expected the RSVP persistence module to exist");
-  if (!persistence) return;
-
-  const storage = new MemoryStorage();
-  const getStorage = () => storage;
-  const blockedStorage = () => {
-    throw new DOMException("Access denied", "SecurityError");
-  };
-
-  assert.equal(persistence.loadInvitationAccessSafely(getStorage), "locked");
-  assert.equal(persistence.persistInvitationAccessSafely(getStorage, "ready"), true);
-  assert.equal(persistence.loadInvitationAccessSafely(getStorage), "ready");
-
-  assert.equal(persistence.loadInvitationAccessSafely(blockedStorage), "locked");
-  assert.equal(persistence.persistInvitationAccessSafely(blockedStorage, "ready"), false);
 });
 
 test("fallback RSVP submission lease blocks other tabs and can only be released by its owner", async () => {

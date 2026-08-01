@@ -8,49 +8,21 @@ async function loadInvitationModule(): Promise<Partial<InvitationModule>> {
   return import("../lib/invitation.ts").catch(() => ({}));
 }
 
-test("to wins over guest", async () => {
+test("guest identity uses only the to slug", async () => {
   const invitation = await loadInvitationModule();
 
-  assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(invitation.resolveGuestName?.("?guest=Secondary&to=Primary"), "Primary");
+  assert.equal(typeof invitation.resolveGuestSlug, "function");
+  assert.equal(invitation.resolveGuestSlug?.("?guest=secondary&to=Rina-Fajar"), "rina-fajar");
+  assert.equal(invitation.resolveGuestSlug?.("?guest=secondary"), "");
 });
 
-test("blank to falls through to guest", async () => {
+test("blank or invalid to values do not create a guest identity", async () => {
   const invitation = await loadInvitationModule();
 
-  assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(invitation.resolveGuestName?.("?to=%20%20&guest=%20Taylor%20"), "Taylor");
-});
-
-test("g is URL decoded", async () => {
-  const invitation = await loadInvitationModule();
-
-  assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(invitation.resolveGuestName?.("?g=Rina+%26+Fajar"), "Rina & Fajar");
-});
-
-test("friendly to links turn separators into a readable guest name", async () => {
-  const invitation = await loadInvitationModule();
-
-  assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(invitation.resolveGuestName?.("?to=Rina-dan-Fajar"), "Rina & Fajar");
-  assert.equal(invitation.resolveGuestName?.("?to=Bapak-Supardi"), "Bapak Supardi");
-});
-
-test("guest identity distinguishes personalized links from the generic invitation", async () => {
-  const invitation = await loadInvitationModule();
-
-  assert.equal(typeof invitation.isPersonalizedGuestName, "function");
-  assert.equal(invitation.isPersonalizedGuestName?.("Rina & Fajar"), true);
-  assert.equal(invitation.isPersonalizedGuestName?.(" object "), false);
-  assert.equal(invitation.isPersonalizedGuestName?.(""), false);
-});
-
-test("returns object when supported values are absent or blank", async () => {
-  const invitation = await loadInvitationModule();
-
-  assert.equal(typeof invitation.resolveGuestName, "function");
-  assert.equal(invitation.resolveGuestName?.("?to=%20&guest=&g=%09&name=Ignored"), "object");
+  assert.equal(typeof invitation.resolveGuestSlug, "function");
+  assert.equal(invitation.resolveGuestSlug?.("?to=%20%20"), "");
+  assert.equal(invitation.resolveGuestSlug?.("?to=Rina%20%26%20Fajar"), "");
+  assert.equal(invitation.resolveGuestSlug?.("?to=rina_fajar"), "");
 });
 
 test("open maps splash to main", async () => {

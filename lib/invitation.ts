@@ -9,27 +9,11 @@ export const MAIN_SCREEN_ASSETS = {
   topFloralOverlay: "/images/main-screen/top-floral-overlay.png",
 } as const;
 
-function formatGuestName(value: string): string {
-  return value.trim().replace(/-dan-/gi, " & ").replace(/-/g, " ").replace(/\s+/g, " ").trim();
-}
+const GUEST_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export function resolveGuestName(search: string): string {
-  const params = new URLSearchParams(search);
-
-  for (const key of ["to", "guest", "g"]) {
-    const value = params.get(key)?.trim();
-
-    if (value) {
-      return formatGuestName(value);
-    }
-  }
-
-  return "object";
-}
-
-export function isPersonalizedGuestName(value: string): boolean {
-  const normalized = value.trim().toLocaleLowerCase("id-ID");
-  return Boolean(normalized && normalized !== "object");
+export function resolveGuestSlug(search: string): string {
+  const value = new URLSearchParams(search).get("to")?.trim().toLocaleLowerCase("en-US") ?? "";
+  return GUEST_SLUG_PATTERN.test(value) ? value : "";
 }
 
 export type InvitationView = "splash" | "main";

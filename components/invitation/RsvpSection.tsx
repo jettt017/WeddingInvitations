@@ -15,16 +15,15 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import DecorativeImage from "@/components/invitation/DecorativeImage";
 import RsvpCelebration from "@/components/invitation/RsvpCelebration";
 import StorySection from "@/components/invitation/StorySection";
-import { isPersonalizedGuestName } from "@/lib/invitation";
+import { type InvitationGuest, submitGuestRsvp } from "@/lib/invitation-api";
 import { type RsvpFormValue, STORY_ASSETS, validateRsvp } from "@/lib/invitation-story";
 import { RSVP_SUCCESS_DURATION_MS } from "@/lib/rsvp-celebration";
-import { findRsvpByGuestName, normalizeRsvpGuestName } from "@/lib/rsvp-guest";
 import {
   acquireRsvpSubmissionLease,
   releaseRsvpSubmissionLease,
   renewRsvpSubmissionLease,
   RSVP_SUBMISSION_LOCK_NAME,
-} from "@/lib/rsvp-persistence";
+} from "@/lib/rsvp-submission-lock";
 import { supabase } from "@/lib/supabase";
 
 interface RsvpSectionProps {
@@ -32,7 +31,7 @@ interface RsvpSectionProps {
   onOpen: () => void;
   onSubmitted: () => void;
   onClose: () => void;
-  rsvpState?: "intro" | "form" | "success";
+  guest: InvitationGuest | null;
   completed?: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }
@@ -53,111 +52,18 @@ const fadeAnim = (delay: number) => ({
   transition: { duration: 1.2, delay, ease: [0.16, 1, 0.3, 1] as const },
 });
 
-interface Wish {
-  id: string;
-  name: string;
-  wishes: string;
-  created_at: string;
-}
-
-function getRelativeTime(dateString: string): string {
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-
-    if (diffMs < 0) return "Baru saja";
-
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    const diffWeeks = Math.floor(diffDays / 7);
-
-    if (diffSecs < 60) {
-      return "Baru saja";
-    } else if (diffMins < 60) {
-      return `${diffMins} menit yang lalu`;
-    } else if (diffHours < 24) {
-      return `${diffHours} jam yang lalu`;
-    } else if (diffDays < 7) {
-      return `${diffDays} hari yang lalu`;
-    } else {
-      return `${diffWeeks} minggu yang lalu`;
-    }
-  } catch {
-    return "";
-  }
-}
-
 function RsvpIntro({
   onOpen,
-  rsvpState,
+  guest,
   completed = false,
   triggerRef,
 }: {
   onOpen: () => void;
-  rsvpState?: "intro" | "form" | "success";
+  guest: InvitationGuest | null;
   completed?: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const assets = STORY_ASSETS.rsvp;
-  const [wishes, setWishes] = useState<Wish[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchWishes() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from("rsvps")
-          .select("id, name, wishes, created_at")
-          .not("wishes", "is", null)
-          .neq("wishes", "")
-          .order("created_at", { ascending: false });
-
-        if (error) throw error;
-        setWishes(data || []);
-      } catch (err) {
-        console.error("Error fetching wishes:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchWishes();
-
-    if (supabase) {
-      const client = supabase;
-      const channel = client
-        .channel("realtime-wishes")
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "rsvps",
-          },
-          (payload) => {
-            const newRsvp = payload.new as Wish;
-            if (newRsvp.wishes) {
-              setWishes((prev) => {
-                if (prev.some((w) => w.id === newRsvp.id)) return prev;
-                return [newRsvp, ...prev];
-              });
-            }
-          }
-        )
-        .subscribe();
-
-      return () => {
-        client.removeChannel(channel);
-      };
-    }
-  }, [rsvpState]);
 
   return (
     <StorySection figmaNode="115:151" section="rsvp-intro">
@@ -198,7 +104,7 @@ function RsvpIntro({
             <>
               Thank you, your response is saved.
               <br />
-              Your wedding gift details are now available.
+              We look forward to celebrating with you.
             </>
           ) : (
             <>
@@ -222,10 +128,11 @@ function RsvpIntro({
             ref={triggerRef}
             type="button"
             onClick={onOpen}
+            disabled={!guest}
             className="font-playfair absolute top-[302px] left-1/2 flex h-[50px] w-[297px] -translate-x-1/2 items-center justify-center gap-4 rounded-full bg-[#D6C8B6] text-[15.2px] font-bold tracking-[0.4px] text-[#453F2F] transition-transform active:scale-[0.98]"
             {...anim(0.35)}
           >
-            CONFIRM ATTENDANCE
+            {guest ? "CONFIRM ATTENDANCE" : "PERSONAL LINK REQUIRED"}
             <Image src={assets.envelope} alt="" width={22} height={19} />
           </motion.button>
         )}
@@ -248,54 +155,6 @@ function RsvpIntro({
           sizes="948px"
           {...fadeAnim(0.45)}
         />
-
-        {/* Wishes List overlay in the empty space below the RSVP button */}
-        <div className="absolute top-[480px] left-[25px] z-20 flex h-[330px] w-[343px] flex-col text-[#453F2F]">
-          <h3 className="font-playfair text-center text-[18px] font-bold tracking-[0.05em] uppercase">
-            Wishes & Prayers
-          </h3>
-          <div className="mx-auto mt-1 mb-4 h-[0.5px] w-16 bg-[#7C5649]/40" />
-
-          <div className="relative min-h-0 flex-1">
-            <div className="h-full [scrollbar-width:none] space-y-3.5 overflow-y-auto px-2 pb-10 [&::-webkit-scrollbar]:hidden">
-              {loading ? (
-                <p className="font-literata mt-8 text-center text-xs text-[#7C5649]/60 italic">
-                  Loading wishes...
-                </p>
-              ) : wishes.length === 0 ? (
-                <p className="font-literata mt-8 text-center text-xs text-[#7C5649]/60 italic">
-                  Be the first to leave a wish!
-                </p>
-              ) : (
-                wishes.map((w, index) => (
-                  <motion.div
-                    key={w.id || index}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
-                    className="border-b border-[#7C5649]/15 pt-1.5 pb-3.5 last:border-b-0"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <p className="font-playfair text-[13px] font-bold tracking-wide text-[#453F2F]">
-                        {w.name}
-                      </p>
-                      {w.created_at && (
-                        <span className="shrink-0 font-sans text-[9px] font-medium tracking-wider text-[#7C5649]/55">
-                          {getRelativeTime(w.created_at)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-literata mt-1.5 text-[12px] leading-[17px] whitespace-pre-line text-[#62483E] italic">
-                      &ldquo;{w.wishes}&rdquo;
-                    </p>
-                  </motion.div>
-                ))
-              )}
-            </div>
-            {/* Smooth Fade Mask at the bottom scroll boundary */}
-            <div className="pointer-events-none absolute right-0 bottom-0 left-0 z-10 h-12 bg-gradient-to-t from-[#FAEBE0] to-transparent" />
-          </div>
-        </div>
       </div>
     </StorySection>
   );
@@ -384,34 +243,30 @@ function createRsvpSubmissionOwner(): string {
 
 export function RsvpForm({
   mode,
-  guestName = "object",
+  guest,
   onSubmitted,
   onClose,
   onAlreadyCompleted,
 }: {
   mode: "form" | "success";
-  guestName?: string;
+  guest: InvitationGuest | null;
   onSubmitted: () => void;
   onClose: () => void;
   onAlreadyCompleted?: () => boolean;
 }) {
   const assets = STORY_ASSETS.rsvpForm;
   const isConfigured = supabase !== null;
-  const isPersonalizedGuest = isPersonalizedGuestName(guestName);
+  const canSubmit = isConfigured && guest !== null && !guest.hasRsvp;
   const formId = useId();
-  const attendanceErrorId = `${formId}-attendance-error`;
-  const nameErrorId = `${formId}-name-error`;
   const guestsErrorId = `${formId}-guests-error`;
-  const attendanceRef = useRef<HTMLSelectElement>(null);
+  const guestsRef = useRef<HTMLInputElement>(null);
   const confirmationRef = useRef<HTMLHeadingElement>(null);
   const loadingStatusRef = useRef<HTMLDivElement>(null);
   const submissionInFlightRef = useRef(false);
   const isMountedRef = useRef(true);
   const [value, setValue] = useState<RsvpFormValue>({
-    attendance: "",
-    name: isPersonalizedGuest ? guestName : "",
     guests: 1,
-    wishes: "",
+    maxGuests: guest?.maxGuests ?? 1,
   });
   const [errors, setErrors] = useState<ReturnType<typeof validateRsvp>>({});
   const [submitError, setSubmitError] = useState("");
@@ -439,7 +294,7 @@ export function RsvpForm({
   }, [isReviewing]);
 
   useEffect(() => {
-    if (mode === "form") attendanceRef.current?.focus();
+    if (mode === "form") guestsRef.current?.focus();
     if (mode === "success") {
       const timer = setTimeout(() => {
         handleClose();
@@ -454,14 +309,11 @@ export function RsvpForm({
     if (submissionInFlightRef.current) return;
     if (onAlreadyCompleted?.()) return;
 
-    const nextErrors = validateRsvp({
-      ...value,
-      name: isPersonalizedGuest ? guestName : value.name,
-    });
+    const nextErrors = validateRsvp(value);
     setErrors(nextErrors);
     setSubmitError("");
 
-    if (Object.keys(nextErrors).length > 0 || !isConfigured) return;
+    if (Object.keys(nextErrors).length > 0 || !canSubmit) return;
     setIsReviewing(true);
   }
 
@@ -470,9 +322,9 @@ export function RsvpForm({
     if (onAlreadyCompleted?.()) return;
 
     const client = supabase;
-    if (!client) return;
+    if (!client || !guest) return;
     const configuredClient = client;
-    const guestIdentity = normalizeRsvpGuestName(isPersonalizedGuest ? guestName : value.name);
+    const currentGuest = guest;
 
     submissionInFlightRef.current = true;
     setIsSubmitting(true);
@@ -480,24 +332,11 @@ export function RsvpForm({
     async function insertOnce(): Promise<RsvpSubmissionOutcome> {
       if (onAlreadyCompleted?.()) return "already-completed";
 
-      const lookup = await findRsvpByGuestName(configuredClient, guestIdentity);
-      if (lookup === "found") {
-        onSubmitted();
-        return "already-completed";
-      }
-      if (lookup === "failed") return "failed";
-
-      const { error } = await configuredClient.from("rsvps").insert({
-        name: guestIdentity,
-        attending: value.attendance === "attending",
-        guests: value.guests,
-        wishes: value.wishes?.trim() || null,
-      });
-
-      if (error) return "failed";
+      const result = await submitGuestRsvp(configuredClient, currentGuest.slug, value.guests);
+      if (result.status === "failed") return "failed";
 
       onSubmitted();
-      return "submitted";
+      return result.status;
     }
 
     let outcome: RsvpSubmissionOutcome = "failed";
@@ -558,7 +397,7 @@ export function RsvpForm({
 
   function handleBackToEdit() {
     setIsReviewing(false);
-    window.requestAnimationFrame(() => attendanceRef.current?.focus());
+    window.requestAnimationFrame(() => guestsRef.current?.focus());
   }
 
   return (
@@ -659,31 +498,15 @@ export function RsvpForm({
 
                   <dl className="font-playfair mt-5 space-y-3 rounded-[18px] bg-[#FAEBE0]/80 px-5 py-4 text-[13px]">
                     <div className="flex items-start justify-between gap-4">
-                      <dt className="text-[#62483E]/75">Attendance</dt>
-                      <dd className="text-right font-semibold">
-                        {value.attendance === "attending"
-                          ? "Joyfully attending"
-                          : "Unable to attend"}
-                      </dd>
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
                       <dt className="text-[#62483E]/75">Guest</dt>
                       <dd className="max-w-[190px] text-right font-semibold">
-                        {normalizeRsvpGuestName(isPersonalizedGuest ? guestName : value.name)}
+                        {guest?.displayName ?? "Invitation not found"}
                       </dd>
                     </div>
                     <div className="flex items-start justify-between gap-4">
                       <dt className="text-[#62483E]/75">Guests</dt>
                       <dd className="text-right font-semibold">{value.guests}</dd>
                     </div>
-                    {value.wishes?.trim() ? (
-                      <div className="border-t border-[#7C5649]/15 pt-3">
-                        <dt className="text-[#62483E]/75">Wishes &amp; Prayers</dt>
-                        <dd className="font-literata mt-1 max-h-[74px] overflow-y-auto text-[11px] leading-[16px] whitespace-pre-wrap italic">
-                          {value.wishes.trim()}
-                        </dd>
-                      </div>
-                    ) : null}
                   </dl>
 
                   <div className="mt-5 grid grid-cols-2 gap-3">
@@ -709,56 +532,17 @@ export function RsvpForm({
                   onSubmit={handleSubmit}
                   className="absolute top-[236px] left-[25px] w-[343px]"
                 >
-                  <motion.label
+                  <motion.div
                     variants={itemVariants}
-                    className="font-playfair block text-[15px] text-[#453F2F]"
+                    className="font-playfair rounded-[18px] bg-[#D6C8B6]/90 px-5 py-4 text-[14px] text-[#453F2F]"
                   >
-                    Your Response:
-                    <select
-                      ref={attendanceRef}
-                      value={value.attendance}
-                      onChange={(event) =>
-                        setValue((current) => ({
-                          ...current,
-                          attendance: event.target.value as RsvpFormValue["attendance"],
-                        }))
-                      }
-                      aria-invalid={Boolean(errors.attendance)}
-                      aria-describedby={errors.attendance ? attendanceErrorId : undefined}
-                      className="mt-3 h-[49px] w-full appearance-none rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                    >
-                      <option value="">Select response</option>
-                      <option value="attending">Joyfully attending</option>
-                      <option value="not_attending">Unable to attend</option>
-                    </select>
-                  </motion.label>
-                  {errors.attendance ? (
-                    <p id={attendanceErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                      {errors.attendance}
-                    </p>
-                  ) : null}
-
-                  <motion.label
-                    variants={itemVariants}
-                    className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-                  >
-                    Name of guest:
-                    <input
-                      value={isPersonalizedGuest ? guestName : value.name}
-                      readOnly={isPersonalizedGuest}
-                      onChange={(event) =>
-                        setValue((current) => ({ ...current, name: event.target.value }))
-                      }
-                      aria-invalid={Boolean(errors.name)}
-                      aria-describedby={errors.name ? nameErrorId : undefined}
-                      className="mt-3 h-[49px] w-full rounded-full bg-[#D6C8B6] px-5 transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                    />
-                  </motion.label>
-                  {errors.name ? (
-                    <p id={nameErrorId} className="mt-1 text-xs text-[#7C2D24]">
-                      {errors.name}
-                    </p>
-                  ) : null}
+                    <span className="block text-[11px] tracking-[0.08em] text-[#62483E]/70 uppercase">
+                      Invitation for
+                    </span>
+                    <strong className="mt-1 block text-[17px] font-semibold">
+                      {guest?.displayName ?? "Personal invitation not found"}
+                    </strong>
+                  </motion.div>
 
                   <motion.label
                     variants={itemVariants}
@@ -766,9 +550,10 @@ export function RsvpForm({
                   >
                     Number of guests:
                     <input
+                      ref={guestsRef}
                       type="number"
                       min={1}
-                      max={10}
+                      max={guest?.maxGuests ?? 1}
                       value={value.guests}
                       onChange={(event) =>
                         setValue((current) => ({ ...current, guests: Number(event.target.value) }))
@@ -784,28 +569,12 @@ export function RsvpForm({
                     </p>
                   ) : null}
 
-                  <motion.label
-                    variants={itemVariants}
-                    className="font-playfair mt-4 block text-[15px] text-[#453F2F]"
-                  >
-                    Wishes & Prayers:
-                    <textarea
-                      rows={2}
-                      value={value.wishes}
-                      onChange={(event) =>
-                        setValue((current) => ({ ...current, wishes: event.target.value }))
-                      }
-                      className="mt-3 w-full resize-none rounded-[18px] bg-[#D6C8B6] px-5 py-3 font-sans text-sm transition-shadow duration-300 outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649]"
-                      placeholder="Leave a message for Kinan & Faiz..."
-                    />
-                  </motion.label>
-
                   <motion.button
                     variants={itemVariants}
                     whileHover={{ scale: 1.015 }}
                     whileTap={{ scale: 0.985 }}
                     type="submit"
-                    disabled={!isConfigured || isSubmitting}
+                    disabled={!canSubmit || isSubmitting}
                     className="font-playfair mt-6 h-[49px] w-full rounded-full bg-[#7C5649] text-[14.5px] text-white shadow-md transition-colors hover:bg-[#684439] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7C5649] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isSubmitting ? "SENDING..." : "CONFIRM"}
@@ -813,6 +582,14 @@ export function RsvpForm({
                   {!isConfigured ? (
                     <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
                       RSVP will be available soon.
+                    </p>
+                  ) : !guest ? (
+                    <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
+                      Open this invitation using your personal guest link.
+                    </p>
+                  ) : guest.hasRsvp ? (
+                    <p className="font-playfair mt-3 text-center text-xs text-[#62483E]">
+                      Your RSVP has already been received.
                     </p>
                   ) : null}
                   {submitError ? (
@@ -868,7 +645,7 @@ export default function RsvpSection({
   onOpen,
   onSubmitted,
   onClose,
-  rsvpState,
+  guest,
   completed = false,
   triggerRef,
 }: RsvpSectionProps) {
@@ -884,14 +661,9 @@ export default function RsvpSection({
         transition={shouldReduceMotion ? { duration: 0 } : transition}
       >
         {mode === "intro" ? (
-          <RsvpIntro
-            onOpen={onOpen}
-            rsvpState={rsvpState}
-            completed={completed}
-            triggerRef={triggerRef}
-          />
+          <RsvpIntro onOpen={onOpen} guest={guest} completed={completed} triggerRef={triggerRef} />
         ) : (
-          <RsvpForm mode={mode} onSubmitted={onSubmitted} onClose={onClose} />
+          <RsvpForm guest={guest} mode={mode} onSubmitted={onSubmitted} onClose={onClose} />
         )}
       </motion.div>
     </AnimatePresence>

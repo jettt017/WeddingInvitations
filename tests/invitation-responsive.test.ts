@@ -14,18 +14,20 @@ test("responsive story exports the Figma design dimensions", async () => {
   const story = await loadStoryModule();
 
   assert.equal(story.INVITATION_DESIGN_WIDTH, 393);
-  assert.equal(story.INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION, 6050);
-  assert.equal(story.INVITATION_STORY_HEIGHT, 6568);
+  assert.equal(story.INVITATION_STORY_HEIGHT, 7420);
 });
 
-test("responsive story scales only below the Figma design width", async () => {
+test("responsive story fills every viewport below the desktop preview breakpoint", async () => {
   const story = await loadStoryModule();
 
   assert.equal(typeof story.calculateInvitationScale, "function");
   assert.equal(story.calculateInvitationScale(320), 320 / 393);
   assert.equal(story.calculateInvitationScale(360), 360 / 393);
   assert.equal(story.calculateInvitationScale(393), 1);
-  assert.equal(story.calculateInvitationScale(768), 1);
+  assert.equal(story.calculateInvitationScale(430), 430 / 393);
+  assert.equal(story.calculateInvitationScale(768), 768 / 393);
+  assert.equal(story.calculateInvitationScale(1023), 1023 / 393);
+  assert.equal(story.calculateInvitationScale(1024), 1);
   assert.equal(story.calculateInvitationScale(1440), 1);
 });
 
@@ -49,6 +51,7 @@ test("responsive wrapper contains the complete updated narrative", async () => {
     "<DateEventSection",
     "<RsvpSection",
     "<TransactionSection",
+    "<WishesSection",
     "<GallerySection",
     "<ThankYouSection",
   ];

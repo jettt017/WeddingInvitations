@@ -10,7 +10,9 @@ import ResponsiveStoryCanvas from "@/components/invitation/ResponsiveStoryCanvas
 import RsvpSection from "@/components/invitation/RsvpSection";
 import ThankYouSection from "@/components/invitation/ThankYouSection";
 import TransactionSection from "@/components/invitation/TransactionSection";
+import WishesSection from "@/components/invitation/WishesSection";
 import MainScreen from "@/components/main-screen/MainScreen";
+import type { InvitationGuest } from "@/lib/invitation-api";
 import {
   getInvitationStoryHeight,
   type StoryInteractionState,
@@ -20,19 +22,23 @@ import {
 interface InvitationStoryProps {
   interaction: StoryInteractionState;
   dispatch: React.Dispatch<StoryInteractionEvent>;
+  guest: InvitationGuest | null;
   rsvpTriggerRef?: RefObject<HTMLButtonElement | null>;
   transactionRevealRef?: RefObject<HTMLButtonElement | null>;
   onRsvpOpen?: () => void;
   onTransactionReveal?: () => void;
+  onWishSubmitted?: () => void;
 }
 
 export default function InvitationStory({
   interaction,
   dispatch,
+  guest,
   rsvpTriggerRef,
   transactionRevealRef,
   onRsvpOpen,
   onTransactionReveal,
+  onWishSubmitted,
 }: InvitationStoryProps) {
   const storyHeight = getInvitationStoryHeight(interaction.transaction);
 
@@ -48,17 +54,20 @@ export default function InvitationStory({
           onOpen={onRsvpOpen ?? (() => dispatch({ type: "open_rsvp" }))}
           onSubmitted={() => {}}
           onClose={() => {}}
-          rsvpState={interaction.rsvp}
-          completed={interaction.transaction !== "locked"}
+          guest={guest}
+          completed={guest?.hasRsvp ?? false}
           triggerRef={rsvpTriggerRef}
         />
-        {interaction.transaction !== "locked" ? (
-          <TransactionSection
-            mode={interaction.transaction}
-            onReveal={onTransactionReveal ?? (() => dispatch({ type: "reveal_transaction" }))}
-            revealButtonRef={transactionRevealRef}
-          />
-        ) : null}
+        <TransactionSection
+          mode={interaction.transaction}
+          onReveal={onTransactionReveal ?? (() => dispatch({ type: "toggle_transaction" }))}
+          revealButtonRef={transactionRevealRef}
+        />
+        <WishesSection
+          key={guest?.slug ?? "anonymous"}
+          guest={guest}
+          onWishSubmitted={onWishSubmitted ?? (() => {})}
+        />
         <GallerySection
           mode={interaction.gallery}
           onOpen={() => dispatch({ type: "open_gallery" })}
