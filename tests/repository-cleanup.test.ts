@@ -19,6 +19,9 @@ const removedPaths = [
   "public/images/story/date-event/rings-icon.svg",
   "public/images/story/groom-bride/groom-photo.webp",
   "public/images/story/gallery/collage.webp",
+  "lib/rsvp-guest.ts",
+  "lib/rsvp-persistence.ts",
+  "types/rsvp.ts",
 ] as const;
 
 test("unused source files and legacy assets are removed", async () => {
