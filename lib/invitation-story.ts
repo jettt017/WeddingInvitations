@@ -1,10 +1,10 @@
 export const WEDDING_EVENT = {
   title: "The Wedding of Kinan & Faiz",
   dateLabel: "August, 16th 2026",
-  start: "2026-08-16T08:00:00+07:00",
+  start: "2026-08-16T10:00:00+07:00",
   end: "2026-08-16T12:00:00+07:00",
   venue: "Surabaya Suites Hotel",
-  timeLabel: "08.00 WIB",
+  timeLabel: "10.00 WIB",
   displayAddress: "Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
   location: "Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
   mapUrl: "https://maps.app.goo.gl/twKJBT2aUCQFUfLC7",
@@ -12,20 +12,19 @@ export const WEDDING_EVENT = {
 } as const;
 
 export const INVITATION_DESIGN_WIDTH = 393;
-export const INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION = 6_050;
-export const INVITATION_STORY_HEIGHT = 6_568;
+export const DESKTOP_PREVIEW_BREAKPOINT = 1_024;
+export const INVITATION_STORY_HEIGHT = 7_420;
 
-export type TransactionAccess = "locked" | "ready" | "revealed";
+export type TransactionAccess = "ready" | "revealed";
 
 export function getInvitationStoryHeight(transaction: TransactionAccess): number {
-  return transaction === "locked"
-    ? INVITATION_STORY_HEIGHT_WITHOUT_TRANSACTION
-    : INVITATION_STORY_HEIGHT;
+  void transaction;
+  return INVITATION_STORY_HEIGHT;
 }
 
 export function calculateInvitationScale(viewportWidth: number): number {
   if (!Number.isFinite(viewportWidth) || viewportWidth <= 0) return 1;
-  return viewportWidth < INVITATION_DESIGN_WIDTH ? viewportWidth / INVITATION_DESIGN_WIDTH : 1;
+  return viewportWidth < DESKTOP_PREVIEW_BREAKPOINT ? viewportWidth / INVITATION_DESIGN_WIDTH : 1;
 }
 
 const storyAsset = (path: string) => `/images/story/${path}`;
@@ -221,24 +220,22 @@ export function hasSupabaseConfig(url: string | undefined, anonKey: string | und
   return Boolean(url?.trim() && anonKey?.trim());
 }
 
-export type RsvpAttendance = "" | "attending" | "not_attending";
-
 export interface RsvpFormValue {
-  attendance: RsvpAttendance;
-  name: string;
   guests: number;
-  wishes?: string;
+  maxGuests: number;
 }
 
-export function validateRsvp(
-  value: RsvpFormValue
-): Partial<Record<"attendance" | "name" | "guests" | "wishes", string>> {
-  const errors: Partial<Record<"attendance" | "name" | "guests" | "wishes", string>> = {};
+export function validateRsvp(value: RsvpFormValue): Partial<Record<"guests", string>> {
+  const errors: Partial<Record<"guests", string>> = {};
 
-  if (!value.attendance) errors.attendance = "Please select your response.";
-  if (!value.name.trim()) errors.name = "Please enter the guest name.";
-  if (!Number.isInteger(value.guests) || value.guests < 1 || value.guests > 10) {
-    errors.guests = "Please enter between 1 and 10 guests.";
+  if (
+    !Number.isInteger(value.guests) ||
+    !Number.isInteger(value.maxGuests) ||
+    value.maxGuests < 1 ||
+    value.guests < 1 ||
+    value.guests > value.maxGuests
+  ) {
+    errors.guests = `Please enter between 1 and ${Math.max(1, value.maxGuests)} guests.`;
   }
 
   return errors;
@@ -254,19 +251,14 @@ export type StoryInteractionEvent =
   | { type: "open_rsvp" }
   | { type: "close_rsvp" }
   | { type: "rsvp_submitted" }
-  | { type: "reveal_transaction" }
-  | { type: "reset_invitation_access" }
-  | {
-      type: "restore_invitation_access";
-      transaction: Exclude<TransactionAccess, "locked">;
-    }
+  | { type: "toggle_transaction" }
   | { type: "open_gallery" }
   | { type: "close_gallery" };
 
 export const INITIAL_STORY_INTERACTION: StoryInteractionState = {
   rsvp: "intro",
   gallery: "preview",
-  transaction: "locked",
+  transaction: "ready",
 };
 
 export function storyInteractionReducer(
@@ -275,7 +267,6 @@ export function storyInteractionReducer(
 ): StoryInteractionState {
   switch (event.type) {
     case "open_rsvp":
-      if (state.transaction !== "locked") return state;
       return { ...state, rsvp: "form" };
     case "close_rsvp":
       return { ...state, rsvp: "intro" };
@@ -283,23 +274,9 @@ export function storyInteractionReducer(
       return {
         ...state,
         rsvp: "success",
-        transaction: state.transaction === "locked" ? "ready" : state.transaction,
       };
-    case "reveal_transaction":
-      if (state.transaction !== "ready") return state;
-      return { ...state, transaction: "revealed" };
-    case "reset_invitation_access":
-      return {
-        ...state,
-        rsvp: "intro",
-        transaction: "locked",
-      };
-    case "restore_invitation_access":
-      return {
-        ...state,
-        rsvp: "intro",
-        transaction: event.transaction,
-      };
+    case "toggle_transaction":
+      return { ...state, transaction: state.transaction === "ready" ? "revealed" : "ready" };
     case "open_gallery":
       return { ...state, gallery: "expanded" };
     case "close_gallery":

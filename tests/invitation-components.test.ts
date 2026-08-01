@@ -15,6 +15,7 @@ test("invitation story renders the updated designs in narrative order", async ()
     "<DateEventSection",
     "<RsvpSection",
     "<TransactionSection",
+    "<WishesSection",
     "<GallerySection",
     "<ThankYouSection",
   ];
@@ -72,7 +73,7 @@ test("RSVP form never reports a submission when Supabase is unavailable", async 
   const supabaseSource = await readSource("../lib/supabase.ts");
 
   assert.match(source, /const isConfigured = supabase !== null/);
-  assert.match(source, /disabled=\{!isConfigured/);
+  assert.match(source, /disabled=\{!canSubmit/);
   assert.match(source, /RSVP will be available soon/);
   assert.doesNotMatch(source, /persistInvitationAccess/);
   assert.match(supabaseSource, /supabase = hasSupabaseConfig/);
@@ -85,8 +86,8 @@ test("RSVP transitions focus their mounted destination and announce form feedbac
   const storySource = await readSource("../components/invitation/InvitationStory.tsx");
 
   assert.match(source, /useId/);
-  assert.match(source, /attendanceRef\.current\?\.focus\(\)/);
-  assert.match(source, /ref=\{attendanceRef\}/);
+  assert.match(source, /guestsRef\.current\?\.focus\(\)/);
+  assert.match(source, /ref=\{guestsRef\}/);
   assert.match(source, /function RsvpSuccess[\s\S]*successRef\.current\?\.focus\(\)/);
   assert.match(source, /ref=\{successRef\}[\s\S]*role="status"[\s\S]*tabIndex=\{-1\}/);
   assert.match(source, /submitError[\s\S]*role="alert"/);
@@ -107,7 +108,7 @@ test("RSVP transitions focus their mounted destination and announce form feedbac
   assert.ok(insertBoundary >= 0 && completionMarker > insertBoundary);
   assert.ok(leaseRelease > completionMarker);
 
-  for (const field of ["attendance", "name", "guests"]) {
+  for (const field of ["guests"]) {
     const errorId = `${field}ErrorId`;
 
     assert.match(source, new RegExp(`id=\\{${errorId}\\}`));
@@ -118,25 +119,23 @@ test("RSVP transitions focus their mounted destination and announce form feedbac
   }
 });
 
-test("personalized invitations confirm and deduplicate RSVP data by the to guest name", async () => {
+test("personalized invitations resolve the to slug and submit one confirmed RSVP", async () => {
   const source = await readSource("../components/invitation/RsvpSection.tsx");
   const experienceSource = await readSource("../components/InvitationExperience.tsx");
-  const guestSource = await readSource("../lib/rsvp-guest.ts");
+  const apiSource = await readSource("../lib/invitation-api.ts");
 
-  assert.match(experienceSource, /resolveGuestName/);
-  assert.match(experienceSource, /isPersonalizedGuestName/);
-  assert.match(experienceSource, /findRsvpByGuestName\(supabase, guestName\)/);
-  assert.match(experienceSource, /guestName=\{guestName\}/);
-  assert.match(source, /guestName\?: string/);
-  assert.match(source, /readOnly=\{isPersonalizedGuest\}/);
+  assert.match(experienceSource, /resolveGuestSlug/);
+  assert.match(experienceSource, /resolveInvitationGuest\(supabase, guestSlug\)/);
+  assert.match(experienceSource, /guest=\{guest\}/);
+  assert.match(source, /guest: InvitationGuest \| null/);
+  assert.match(source, /guest\?\.displayName|guest\.displayName/);
+  assert.match(source, /guest\?\.maxGuests|guest\.maxGuests/);
   assert.match(source, /Please make sure your RSVP details are correct/);
   assert.match(source, /BACK TO EDIT/);
   assert.match(source, /YES, SEND RSVP/);
-  assert.match(source, /findRsvpByGuestName\(configuredClient, guestIdentity\)/);
-  assert.match(
-    guestSource,
-    /\.select\("id"\)[\s\S]*\.eq\("name", normalizedName\)[\s\S]*\.limit\(1\)/
-  );
+  assert.match(source, /submitGuestRsvp\(configuredClient, currentGuest\.slug, value\.guests\)/);
+  assert.doesNotMatch(source, /not_attending|attending|Your Response:/);
+  assert.doesNotMatch(apiSource, /\.from\("guests"\)|\.from\("rsvps"\)/);
 });
 
 test("gallery transitions focus the newly mounted back button and restore the preview trigger", async () => {
@@ -150,11 +149,12 @@ test("gallery transitions focus the newly mounted back button and restore the pr
   assert.match(source, /setShouldRestorePreviewFocus\(false\)/);
 });
 
-test("music controls use an optional configured source and remain accessible without it", async () => {
+test("music controls use the full local song with an optional environment override", async () => {
   const source = await readSource("../components/invitation/MusicButton.tsx");
 
   assert.match(source, /NEXT_PUBLIC_WEDDING_MUSIC_SRC/);
-  assert.match(source, /disabled=\{!canPlay\}/);
+  assert.match(source, /\/music\/wedding-song\.mp3/);
+  assert.match(source, /preload="none"/);
   assert.match(source, /aria-label/);
 });
 
@@ -205,7 +205,7 @@ test("couple cover and gallery preview render configured photos without placehol
   assert.doesNotMatch(source, /figma\.com\/api\/mcp\/asset/);
 });
 
-test("transaction section is gated by RSVP and reveals account details on demand", async () => {
+test("transaction is always present and supports reveal and unreveal", async () => {
   const experienceSource = await readSource("../components/InvitationExperience.tsx");
   const storySource = await readSource("../components/invitation/InvitationStory.tsx");
   const rsvpSource = await readSource("../components/invitation/RsvpSection.tsx");
@@ -214,18 +214,19 @@ test("transaction section is gated by RSVP and reveals account details on demand
 
   assert.ok(
     storySource.indexOf("<RsvpSection") < storySource.indexOf("<TransactionSection") &&
-      storySource.indexOf("<TransactionSection") < storySource.indexOf("<GallerySection")
+      storySource.indexOf("<TransactionSection") < storySource.indexOf("<WishesSection") &&
+      storySource.indexOf("<WishesSection") < storySource.indexOf("<GallerySection")
   );
-  assert.match(storySource, /interaction\.transaction !== "locked"/);
   assert.match(storySource, /mode=\{interaction\.transaction\}/);
-  assert.match(storySource, /type: "reveal_transaction"/);
-  assert.match(storySource, /completed=\{interaction\.transaction !== "locked"\}/);
+  assert.match(storySource, /type: "toggle_transaction"/);
+  assert.match(storySource, /completed=\{guest\?\.hasRsvp/);
   assert.match(transactionSource, /figmaNode="244:41"/);
   assert.match(transactionSource, /SUPPORT THE STORY/);
   assert.match(transactionSource, /Be Part of This Journey/);
   assert.match(transactionSource, /TAP TO REVEAL/);
   assert.match(transactionSource, /aria-expanded=\{mode === "revealed"\}/);
   assert.match(transactionSource, /aria-controls="transaction-account-details"/);
+  assert.match(transactionSource, /TAP AGAIN TO HIDE/);
   assert.match(transactionSource, /fetch\("\/api\/transaction"/);
   assert.doesNotMatch(transactionSource, /\b\d{10,16}\b/);
   assert.doesNotMatch(transactionSource, /FAIZ ARDYSYAHPUTRA|PRAMESTHI WAHYURING KINASIH/);
@@ -234,14 +235,40 @@ test("transaction section is gated by RSVP and reveals account details on demand
   assert.match(routeSource, /status:\s*503/);
   assert.match(routeSource, /private, no-store/);
   assert.match(rsvpSource, /RSVP RECEIVED/);
-  assert.match(experienceSource, /loadInvitationAccessSafely/);
-  assert.match(experienceSource, /persistInvitationAccessSafely/);
-  assert.match(experienceSource, /window\.addEventListener\("storage"/);
-  assert.match(experienceSource, /RSVP_ACCESS_STORAGE_KEY/);
-  assert.match(experienceSource, /onAlreadyCompleted=\{handleRsvpCompletionCheck\}/);
-  assert.doesNotMatch(experienceSource, /InvitationAccess\(window\.localStorage/);
+  assert.doesNotMatch(experienceSource, /RSVP_ACCESS_STORAGE_KEY|loadInvitationAccessSafely/);
   assert.match(transactionSource, /STORY_ASSETS\.transaction/);
   assert.doesNotMatch(transactionSource, /figma\.com\/api\/mcp\/asset/);
+});
+
+test("wishes are a separate section and database submission", async () => {
+  const storySource = await readSource("../components/invitation/InvitationStory.tsx");
+  const rsvpSource = await readSource("../components/invitation/RsvpSection.tsx");
+  const wishesSource = await readSource("../components/invitation/WishesSection.tsx");
+
+  assert.match(storySource, /import WishesSection/);
+  assert.match(
+    storySource,
+    /<WishesSection[\s\S]*key=\{guest\?\.slug \?\? "anonymous"\}[\s\S]*guest=\{guest\}/
+  );
+  assert.match(wishesSource, /listVisibleWishes/);
+  assert.match(wishesSource, /submitGuestWish/);
+  assert.match(wishesSource, /Wishes &amp; Prayers/);
+  assert.match(wishesSource, /Sender name/);
+  assert.match(wishesSource, /Message/);
+  assert.doesNotMatch(wishesSource, /\.from\("rsvps"\)/);
+  assert.doesNotMatch(rsvpSource, /Wishes & Prayers:|value\.wishes/);
+});
+
+test("guest-bound forms reset by identity without synchronous prop-mirroring effects", async () => {
+  const experienceSource = await readSource("../components/InvitationExperience.tsx");
+  const rsvpSource = await readSource("../components/invitation/RsvpSection.tsx");
+  const wishesSource = await readSource("../components/invitation/WishesSection.tsx");
+
+  assert.match(experienceSource, /resolvedGuest\?\.slug === guestSlug \? resolvedGuest : null/);
+  assert.match(experienceSource, /<RsvpForm[\s\S]*key=\{guest\?\.slug \?\? "unresolved"\}/);
+  assert.doesNotMatch(experienceSource, /setGuest\(null\)/);
+  assert.doesNotMatch(rsvpSource, /useEffect\(\(\) => \{\s*setValue/);
+  assert.doesNotMatch(wishesSource, /useEffect\(\(\) => \{\s*setSenderName/);
 });
 
 test("RSVP overlay behaves as a modal and hides the invitation story", async () => {

@@ -233,17 +233,16 @@ export default function TransactionSection({
         <button
           ref={revealButtonRef}
           type="button"
-          onClick={mode === "ready" ? onReveal : undefined}
+          onClick={onReveal}
           aria-expanded={mode === "revealed"}
           aria-controls="transaction-account-details"
-          aria-disabled={mode === "revealed"}
           className={`font-playfair absolute left-1/2 z-20 -translate-x-1/2 rounded-full border border-[#7C5649]/35 bg-[#EEE3D4]/95 font-bold tracking-[1.3px] text-[#5B4037] shadow-[0_8px_22px_rgba(73,48,38,0.16)] transition-[top,width,height,background-color] focus-visible:ring-2 focus-visible:ring-[#7C5649] focus-visible:ring-offset-2 focus-visible:outline-none ${
             mode === "ready"
               ? "top-[151px] h-[72px] w-[285px] text-[14px] active:bg-[#E2D1BD]"
-              : "top-[108px] h-[30px] w-[204px] cursor-default text-[10.5px]"
+              : "top-[108px] h-[30px] w-[204px] text-[10.5px] active:bg-[#E2D1BD]"
           }`}
         >
-          {mode === "ready" ? "TAP TO REVEAL" : "ACCOUNT DETAILS REVEALED"}
+          {mode === "ready" ? "TAP TO REVEAL" : "TAP AGAIN TO HIDE"}
           {mode === "ready" ? (
             <span className="mt-1 block text-[9px] font-normal tracking-[0.8px]">
               Wedding gift information
@@ -261,8 +260,8 @@ export default function TransactionSection({
         >
           {mode === "ready" ? (
             <p className="font-playfair absolute top-[244px] left-[65px] w-[263px] text-center text-[12px] leading-[18px] text-[#5B4037]/80">
-              Account details are available after your confirmed RSVP and remain hidden until you
-              choose to reveal them.
+              Tap the button to view the wedding gift accounts. Tap it again whenever you want to
+              hide the details.
             </p>
           ) : null}
 

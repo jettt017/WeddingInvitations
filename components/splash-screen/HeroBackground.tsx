@@ -1,31 +1,14 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-import { resolveGuestName } from "@/lib/invitation";
-
 interface HeroBackgroundProps {
+  guestName: string;
   onOpen: () => void;
 }
 
-function subscribeToLocation(onStoreChange: () => void) {
-  window.addEventListener("popstate", onStoreChange);
-  return () => window.removeEventListener("popstate", onStoreChange);
-}
-
-function readGuestName() {
-  return resolveGuestName(window.location.search);
-}
-
-function readServerGuestName() {
-  return resolveGuestName("");
-}
-
-export default function HeroBackground({ onOpen }: HeroBackgroundProps) {
-  const guestName = useSyncExternalStore(subscribeToLocation, readGuestName, readServerGuestName);
-
+export default function HeroBackground({ guestName, onOpen }: HeroBackgroundProps) {
   return (
     <div className="relative flex h-dvh w-full flex-col items-center justify-between overflow-hidden text-white select-none lg:h-full">
       {/* Background Image with subtle overlay */}

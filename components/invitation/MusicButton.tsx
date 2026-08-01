@@ -18,7 +18,7 @@ const MusicContext = createContext<MusicContextValue>({
   toggle: () => undefined,
 });
 
-const musicSource = process.env.NEXT_PUBLIC_WEDDING_MUSIC_SRC?.trim() || "";
+const musicSource = process.env.NEXT_PUBLIC_WEDDING_MUSIC_SRC?.trim() || "/music/wedding-song.mp3";
 
 export const roundControlButtonClassName =
   "flex size-[34px] items-center justify-center rounded-full bg-white text-black shadow-sm transition-transform focus-visible:ring-2 focus-visible:ring-black/35 focus-visible:outline-none enabled:active:scale-95 disabled:cursor-default disabled:opacity-70";
