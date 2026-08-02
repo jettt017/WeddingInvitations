@@ -25,6 +25,72 @@ test("blank or invalid to values do not create a guest identity", async () => {
   assert.equal(invitation.resolveGuestSlug?.("?to=rina_fajar"), "");
 });
 
+test("guest greeting stays hidden while a valid invitation is resolving", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.resolveGuestGreetingName, "function");
+  assert.equal(
+    invitation.resolveGuestGreetingName?.({
+      requestedSlug: "ellen-lusman",
+      completedSlug: "",
+      displayName: null,
+      canResolve: true,
+    }),
+    null
+  );
+});
+
+test("guest greeting uses the resolved Supabase display name", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.resolveGuestGreetingName, "function");
+  assert.equal(
+    invitation.resolveGuestGreetingName?.({
+      requestedSlug: "ellen-lusman",
+      completedSlug: "ellen-lusman",
+      displayName: "Ibu Ellen Lusman",
+      canResolve: true,
+    }),
+    "Ibu Ellen Lusman"
+  );
+});
+
+test("guest greeting falls back to Guest when identity is unavailable", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.resolveGuestGreetingName, "function");
+  assert.equal(
+    invitation.resolveGuestGreetingName?.({
+      requestedSlug: "missing-guest",
+      completedSlug: "missing-guest",
+      displayName: null,
+      canResolve: true,
+    }),
+    "Guest"
+  );
+  assert.equal(
+    invitation.resolveGuestGreetingName?.({
+      requestedSlug: "",
+      completedSlug: "",
+      displayName: null,
+      canResolve: true,
+    }),
+    "Guest"
+  );
+});
+
+test("guest greeting layout stacks long names without changing short names", async () => {
+  const invitation = await loadInvitationModule();
+
+  assert.equal(typeof invitation.getGuestGreetingLayout, "function");
+  assert.equal(invitation.getGuestGreetingLayout?.("Ibu Ellen Lusman"), "inline");
+  assert.equal(
+    invitation.getGuestGreetingLayout?.("dr. Nanang Rudianto Widodo, Sp.OG. (K) FER"),
+    "stacked"
+  );
+  assert.equal(invitation.getGuestGreetingLayout?.(null), "inline");
+});
+
 test("open maps splash to main", async () => {
   const invitation = await loadInvitationModule();
 
