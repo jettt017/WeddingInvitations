@@ -138,6 +138,24 @@ test("personalized invitations resolve the to slug and submit one confirmed RSVP
   assert.doesNotMatch(apiSource, /\.from\("guests"\)|\.from\("rsvps"\)/);
 });
 
+test("splash greeting waits for the resolved guest and never renders Object", async () => {
+  const experienceSource = await readSource("../components/InvitationExperience.tsx");
+  const heroSource = await readSource("../components/splash-screen/HeroBackground.tsx");
+
+  assert.match(experienceSource, /resolveGuestGreetingName/);
+  assert.match(experienceSource, /completedGuestLookupSlug/);
+  assert.match(experienceSource, /guestName=\{guestGreetingName\}/);
+  assert.doesNotMatch(experienceSource, /["']object["']/i);
+  assert.match(heroSource, /guestName: string \| null/);
+  assert.match(heroSource, /getGuestGreetingLayout/);
+  assert.match(heroSource, /aria-live="polite"/);
+  assert.match(heroSource, /Loading guest name/);
+  assert.match(heroSource, /max-w-\[245px\]/);
+  assert.match(heroSource, /max-w-\[300px\]/);
+  assert.match(heroSource, /whitespace-normal/);
+  assert.match(heroSource, /break-words/);
+});
+
 test("gallery transitions focus the newly mounted back button and restore the preview trigger", async () => {
   const source = await readSource("../components/invitation/GallerySection.tsx");
 

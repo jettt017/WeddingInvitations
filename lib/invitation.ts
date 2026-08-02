@@ -16,6 +16,34 @@ export function resolveGuestSlug(search: string): string {
   return GUEST_SLUG_PATTERN.test(value) ? value : "";
 }
 
+interface GuestGreetingInput {
+  requestedSlug: string;
+  completedSlug: string;
+  displayName: string | null;
+  canResolve: boolean;
+}
+
+export function resolveGuestGreetingName({
+  requestedSlug,
+  completedSlug,
+  displayName,
+  canResolve,
+}: GuestGreetingInput): string | null {
+  if (requestedSlug && canResolve && completedSlug !== requestedSlug) {
+    return null;
+  }
+
+  if (requestedSlug && completedSlug === requestedSlug && displayName?.trim()) {
+    return displayName.trim();
+  }
+
+  return "Guest";
+}
+
+export function getGuestGreetingLayout(displayName: string | null): "inline" | "stacked" {
+  return (displayName?.trim().length ?? 0) > 24 ? "stacked" : "inline";
+}
+
 export type InvitationView = "splash" | "main";
 export type InvitationEvent = { type: "open" };
 

@@ -3,12 +3,17 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 
+import { getGuestGreetingLayout } from "@/lib/invitation";
+
 interface HeroBackgroundProps {
-  guestName: string;
+  guestName: string | null;
   onOpen: () => void;
 }
 
 export default function HeroBackground({ guestName, onOpen }: HeroBackgroundProps) {
+  const guestGreetingLayout = getGuestGreetingLayout(guestName);
+  const isStackedGreeting = guestGreetingLayout === "stacked";
+
   return (
     <div className="relative flex h-dvh w-full flex-col items-center justify-between overflow-hidden text-white select-none lg:h-full">
       {/* Background Image with subtle overlay */}
@@ -32,14 +37,34 @@ export default function HeroBackground({ guestName, onOpen }: HeroBackgroundProp
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 flex flex-col items-center text-center"
+          className="mt-8 flex shrink-0 flex-col items-center text-center"
         >
-          <div className="flex items-baseline space-x-2.5">
-            <span className="font-literata text-[20px] font-normal tracking-wide text-white/90">
+          <div
+            className={`flex max-w-[340px] items-center justify-center ${
+              isStackedGreeting ? "flex-col gap-1" : "gap-2.5"
+            }`}
+          >
+            <span className="font-literata shrink-0 text-[20px] font-normal tracking-wide text-white/90">
               Dear
             </span>
-            <span className="font-qwigley translate-y-1 text-[48px] leading-[0.5] font-normal text-[#fbead8]">
-              {guestName}
+            <span
+              aria-live="polite"
+              aria-busy={guestName === null}
+              className={`font-qwigley flex min-h-8 min-w-0 translate-y-1 items-center justify-center break-words whitespace-normal font-normal text-[#fbead8] ${
+                isStackedGreeting
+                  ? "max-w-[300px] text-[36px] leading-[0.84]"
+                  : "max-w-[245px] text-[42px] leading-[0.78]"
+              }`}
+            >
+              {guestName ?? (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className="h-6 w-28 animate-pulse rounded-full bg-[#fbead8]/35 motion-reduce:animate-none"
+                  />
+                  <span className="sr-only">Loading guest name</span>
+                </>
+              )}
             </span>
           </div>
 

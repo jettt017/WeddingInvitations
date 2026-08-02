@@ -20,7 +20,11 @@ import MusicButton, {
 } from "@/components/invitation/MusicButton";
 import { RsvpForm } from "@/components/invitation/RsvpSection";
 import HeroBackground from "@/components/splash-screen/HeroBackground";
-import { invitationViewReducer, resolveGuestSlug } from "@/lib/invitation";
+import {
+  invitationViewReducer,
+  resolveGuestGreetingName,
+  resolveGuestSlug,
+} from "@/lib/invitation";
 import { type InvitationGuest, resolveInvitationGuest } from "@/lib/invitation-api";
 import {
   INITIAL_STORY_INTERACTION,
@@ -75,6 +79,7 @@ function InvitationExperienceContent() {
   const isRsvpDialogClosingRef = useRef(false);
   const shouldFocusRsvpTriggerRef = useRef(false);
   const [resolvedGuest, setResolvedGuest] = useState<InvitationGuest | null>(null);
+  const [completedGuestLookupSlug, setCompletedGuestLookupSlug] = useState("");
 
   const viewportWidth = useSyncExternalStore(
     subscribeToViewport,
@@ -83,6 +88,12 @@ function InvitationExperienceContent() {
   );
   const guestSlug = useSyncExternalStore(subscribeToGuestSlug, getGuestSlug, getServerGuestSlug);
   const guest = resolvedGuest?.slug === guestSlug ? resolvedGuest : null;
+  const guestGreetingName = resolveGuestGreetingName({
+    requestedSlug: guestSlug,
+    completedSlug: completedGuestLookupSlug,
+    displayName: guest?.displayName ?? null,
+    canResolve: supabase !== null,
+  });
   const scale = calculateInvitationScale(viewportWidth);
   const isRsvpOverlayOpen =
     view === "main" && (interaction.rsvp === "form" || interaction.rsvp === "success");
@@ -96,6 +107,7 @@ function InvitationExperienceContent() {
     void resolveInvitationGuest(supabase, guestSlug).then((result) => {
       if (cancelled) return;
       setResolvedGuest(result.status === "found" ? result.guest : null);
+      setCompletedGuestLookupSlug(guestSlug);
     });
 
     return () => {
@@ -201,10 +213,7 @@ function InvitationExperienceContent() {
                 ease: transitionEase,
               }}
             >
-              <HeroBackground
-                guestName={guest?.displayName ?? "object"}
-                onOpen={handleInvitationOpen}
-              />
+              <HeroBackground guestName={guestGreetingName} onOpen={handleInvitationOpen} />
             </motion.div>
           ) : (
             <motion.div
