@@ -324,6 +324,7 @@ test("event details render one compact Surabaya Suites reception card", async ()
 
   assert.match(source, /height=\{938\}/);
   assert.match(source, /RESEPSI/);
+  assert.match(source, /WEDDING_EVENT\.room[\s\S]*WEDDING_EVENT\.venue/);
   assert.match(source, /WEDDING_EVENT\.venue/);
   assert.match(source, /WEDDING_EVENT\.displayAddress/);
   assert.match(source, /href=\{WEDDING_EVENT\.mapUrl\}/);
