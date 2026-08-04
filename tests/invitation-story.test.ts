@@ -14,8 +14,9 @@ test("wedding event is scheduled for 16 August 2026 in Jakarta time", async () =
   if (!("WEDDING_EVENT" in story)) return;
 
   assert.equal(story.WEDDING_EVENT.dateLabel, "August, 16th 2026");
-  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T10:00:00+07:00");
-  assert.equal(story.WEDDING_EVENT.timeLabel, "10.00 WIB");
+  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T09:30:00+07:00");
+  assert.equal(story.WEDDING_EVENT.end, "2026-08-16T11:30:00+07:00");
+  assert.equal(story.WEDDING_EVENT.timeLabel, "09.30–11.30 WIB");
   assert.equal(story.WEDDING_EVENT.venue, "Surabaya Suites Hotel");
   assert.equal(
     story.WEDDING_EVENT.location,
@@ -32,25 +33,25 @@ test("countdown separates remaining time into days hours minutes and seconds", a
   if (!("calculateCountdown" in story)) return;
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-15T00:00:00+07:00")),
-    { days: 1, hours: 10, minutes: 0, seconds: 0 }
+    story.calculateCountdown("2026-08-16T09:30:00+07:00", new Date("2026-08-15T00:00:00+07:00")),
+    { days: 1, hours: 9, minutes: 30, seconds: 0 }
   );
 });
 
 test("countdown uses the exact UTC instants for the wedding event", async () => {
   const story = await loadStoryModule();
 
-  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T10:00:00+07:00");
-  assert.equal(story.WEDDING_EVENT.end, "2026-08-16T12:00:00+07:00");
-  assert.equal(new Date(story.WEDDING_EVENT.start).toISOString(), "2026-08-16T03:00:00.000Z");
-  assert.equal(new Date(story.WEDDING_EVENT.end).toISOString(), "2026-08-16T05:00:00.000Z");
+  assert.equal(story.WEDDING_EVENT.start, "2026-08-16T09:30:00+07:00");
+  assert.equal(story.WEDDING_EVENT.end, "2026-08-16T11:30:00+07:00");
+  assert.equal(new Date(story.WEDDING_EVENT.start).toISOString(), "2026-08-16T02:30:00.000Z");
+  assert.equal(new Date(story.WEDDING_EVENT.end).toISOString(), "2026-08-16T04:30:00.000Z");
 });
 
 test("countdown rounds positive partial seconds up", async () => {
   const story = await loadStoryModule();
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-16T02:59:59.999Z")),
+    story.calculateCountdown("2026-08-16T09:30:00+07:00", new Date("2026-08-16T02:29:59.999Z")),
     { days: 0, hours: 0, minutes: 0, seconds: 1 }
   );
 });
@@ -59,7 +60,7 @@ test("countdown returns zero at the exact event start", async () => {
   const story = await loadStoryModule();
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-16T03:00:00.000Z")),
+    story.calculateCountdown("2026-08-16T09:30:00+07:00", new Date("2026-08-16T02:30:00.000Z")),
     { days: 0, hours: 0, minutes: 0, seconds: 0 }
   );
 });
@@ -71,7 +72,7 @@ test("countdown stops at zero after the event starts", async () => {
   if (!("calculateCountdown" in story)) return;
 
   assert.deepEqual(
-    story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("2026-08-17T00:00:00+07:00")),
+    story.calculateCountdown("2026-08-16T09:30:00+07:00", new Date("2026-08-17T00:00:00+07:00")),
     { days: 0, hours: 0, minutes: 0, seconds: 0 }
   );
 });
@@ -85,7 +86,7 @@ test("countdown never exposes NaN for invalid dates", async () => {
     minutes: 0,
     seconds: 0,
   });
-  assert.deepEqual(story.calculateCountdown("2026-08-16T10:00:00+07:00", new Date("not-a-date")), {
+  assert.deepEqual(story.calculateCountdown("2026-08-16T09:30:00+07:00", new Date("not-a-date")), {
     days: 0,
     hours: 0,
     minutes: 0,
@@ -105,7 +106,7 @@ test("calendar link contains the configured couple date and venue", async () => 
   assert.equal(url.origin + url.pathname, "https://calendar.google.com/calendar/render");
   assert.equal(url.searchParams.get("action"), "TEMPLATE");
   assert.match(url.searchParams.get("text") ?? "", /Kinan.*Faiz/i);
-  assert.match(url.searchParams.get("dates") ?? "", /^20260816T030000Z\//);
+  assert.equal(url.searchParams.get("dates"), "20260816T023000Z/20260816T043000Z");
   assert.match(url.searchParams.get("location") ?? "", /Surabaya Suites Hotel/i);
   assert.match(url.searchParams.get("location") ?? "", /Surabaya 60271/i);
 });

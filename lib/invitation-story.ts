@@ -1,10 +1,10 @@
 export const WEDDING_EVENT = {
   title: "The Wedding of Kinan & Faiz",
   dateLabel: "August, 16th 2026",
-  start: "2026-08-16T10:00:00+07:00",
-  end: "2026-08-16T12:00:00+07:00",
+  start: "2026-08-16T09:30:00+07:00",
+  end: "2026-08-16T11:30:00+07:00",
   venue: "Surabaya Suites Hotel",
-  timeLabel: "10.00 WIB",
+  timeLabel: "09.30–11.30 WIB",
   displayAddress: "Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
   location: "Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271",
   mapUrl: "https://maps.app.goo.gl/twKJBT2aUCQFUfLC7",
