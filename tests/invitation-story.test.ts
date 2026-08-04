@@ -17,10 +17,11 @@ test("wedding event is scheduled for 16 August 2026 in Jakarta time", async () =
   assert.equal(story.WEDDING_EVENT.start, "2026-08-16T09:30:00+07:00");
   assert.equal(story.WEDDING_EVENT.end, "2026-08-16T11:30:00+07:00");
   assert.equal(story.WEDDING_EVENT.timeLabel, "09.30–11.30 WIB");
+  assert.equal(story.WEDDING_EVENT.room, "Pala Ballroom");
   assert.equal(story.WEDDING_EVENT.venue, "Surabaya Suites Hotel");
   assert.equal(
     story.WEDDING_EVENT.location,
-    "Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271"
+    "Pala Ballroom, Surabaya Suites Hotel, Plaza Boulevard, Jl. Pemuda No. 33-37, Surabaya 60271"
   );
   assert.equal(story.WEDDING_EVENT.mapUrl, "https://maps.app.goo.gl/twKJBT2aUCQFUfLC7");
   assert.doesNotMatch(story.WEDDING_EVENT.details, /akad/i);
@@ -107,6 +108,7 @@ test("calendar link contains the configured couple date and venue", async () => 
   assert.equal(url.searchParams.get("action"), "TEMPLATE");
   assert.match(url.searchParams.get("text") ?? "", /Kinan.*Faiz/i);
   assert.equal(url.searchParams.get("dates"), "20260816T023000Z/20260816T043000Z");
+  assert.match(url.searchParams.get("location") ?? "", /Pala Ballroom/i);
   assert.match(url.searchParams.get("location") ?? "", /Surabaya Suites Hotel/i);
   assert.match(url.searchParams.get("location") ?? "", /Surabaya 60271/i);
 });

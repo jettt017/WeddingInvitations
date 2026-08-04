@@ -102,16 +102,16 @@ function ReceptionCard() {
       <p className="font-playfair absolute top-[142px] w-full text-center text-[16.271px] leading-[22.78px] font-bold tracking-[0.4068px]">
         {WEDDING_EVENT.timeLabel}
       </p>
-      <p className="font-playfair absolute top-[197px] left-[20px] w-[275px] text-center text-[15.2px] leading-[22.2px] tracking-[0.3px]">
-        {WEDDING_EVENT.venue}
-        <br />
-        {WEDDING_EVENT.displayAddress}
-      </p>
+      <div className="font-playfair absolute top-[184px] left-[20px] w-[275px] text-center tracking-[0.3px]">
+        <p className="text-[15.2px] leading-5 font-bold">{WEDDING_EVENT.room}</p>
+        <p className="text-[15.2px] leading-5">{WEDDING_EVENT.venue}</p>
+        <p className="text-[13.2px] leading-[18px]">{WEDDING_EVENT.displayAddress}</p>
+      </div>
       <a
         href={WEDDING_EVENT.mapUrl}
         target="_blank"
         rel="noreferrer"
-        className="font-playfair absolute top-[270px] left-1/2 flex -translate-x-1/2 items-center gap-2 text-[16px] leading-6 whitespace-nowrap underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2"
+        className="font-playfair absolute top-[278px] left-1/2 flex -translate-x-1/2 items-center gap-2 text-[16px] leading-6 whitespace-nowrap underline underline-offset-4 focus-visible:rounded-sm focus-visible:outline-2"
       >
         OPEN MAP
         <Image src={STORY_ASSETS.dateEvent.mapPin} alt="" width={12} height={15} />
